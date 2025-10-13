@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Cliente - ProManos</title>
+    <link rel="stylesheet" href="/public/css/main.css">
+    <link rel="stylesheet" href="/public/css/cliente.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header class="dashboard-header">
+        <div class="container">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1 style="margin: 0;">
+                        <i class="fas fa-user"></i> Panel del Cliente
+                    </h1>
+                    <p style="margin: 0; opacity: 0.9;" id="welcomeMessage">Bienvenido</p>
+                </div>
+                <nav>
+                    <a href="/" class="btn btn-outline" style="margin-right: 10px;">
+                        <i class="fas fa-home"></i> Inicio
+                    </a>
+                    <button class="btn btn-outline" onclick="authManager.logout()">
+                        <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container" style="padding: 2rem 0;">
+        <div class="row">
+            <div class="col-6">
+                <div class="card">
+                    <h3><i class="fas fa-plus-circle"></i> Nueva Solicitud</h3>
+                    <form id="serviceForm">
+                        <div class="form-group">
+                            <label class="form-label">Tipo de Servicio</label>
+                            <select id="tipo" class="form-control" required>
+                                <option value="">Selecciona un servicio</option>
+                                <option value="albañil">Albañilería</option>
+                                <option value="plomero">Plomería</option>
+                                <option value="electricista">Electricidad</option>
+                                <option value="pintor">Pintura</option>
+                                <option value="carpintero">Carpintería</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Descripción del Trabajo</label>
+                            <textarea id="descripcion" class="form-control" rows="4" placeholder="Describe en detalle lo que necesitas..." required></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Dirección</label>
+                            <input type="text" id="direccion" class="form-control" placeholder="Dirección donde se realizará el trabajo" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Teléfono de Contacto</label>
+                            <input type="tel" id="telefono" class="form-control" placeholder="Ej: 3001234567" pattern="[0-9]{10}" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Correo Electrónico</label>
+                            <input type="email" id="correo" class="form-control" placeholder="tu@email.com" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">
+                            <i class="fas fa-paper-plane"></i> Enviar Solicitud
+                        </button>
+                    </form>
+                    <div id="formMessage" style="margin-top: 1rem;"></div>
+                </div>
+            </div>
+
+            <div class="col-6">
+                <div class="card">
+                    <h3><i class="fas fa-history"></i> Mis Solicitudes Recientes</h3>
+                    <div id="solicitudesContainer">
+                        <p>Cargando tus solicitudes...</p>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 2rem;">
+                    <h3><i class="fas fa-chart-line"></i> Estadísticas</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <span class="stat-number" id="stat-total">0</span>
+                            <span class="stat-label">Total Solicitudes</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-number" id="stat-pendientes">0</span>
+                            <span class="stat-label">Pendientes</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-number" id="stat-completadas">0</span>
+                            <span class="stat-label">Completadas</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="/public/js/auth.js"></script>
+    <script src="/public/js/cliente.js"></script>
+    <script>
+        // Verificar autenticación
+        if (!authManager.checkAuth('clientes')) {
+            // Redirige automáticamente si no está autenticado
+        }
+
+        // Mostrar nombre de usuario
+        document.getElementById('welcomeMessage').textContent = 
+            `Bienvenido, ${authManager.user?.nombre || 'Cliente'}`;
+    </script>
+</body>
+</html>

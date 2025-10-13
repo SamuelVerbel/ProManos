@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dashboard Trabajador - ProManos</title>
+    <link rel="stylesheet" href="/public/css/main.css">
+    <link rel="stylesheet" href="/public/css/trabajador.css">
+    <script src="/public/js/auth.js"></script>
+</head>
+<body>
+    <header class="container">
+        <h1>Panel de Trabajador</h1>
+        <button class="btn btn-outline" onclick="authManager.logout()">Cerrar sesión</button>
+    </header>
+
+    <main class="container">
+        <section class="card">
+            <h3>Solicitudes disponibles</h3>
+            <div id="solicitudesList">Cargando...</div>
+        </section>
+    </main>
+
+    <script>
+        async function cargarSolicitudes() {
+            const res = await fetch('/api/solicitudes');
+            const solicitudes = await res.json();
+            const container = document.getElementById('solicitudesList');
+            if (!solicitudes.length) {
+                container.innerHTML = '<p>No hay solicitudes</p>';
+                return;
+            }
+
+            container.innerHTML = solicitudes.map(s => `
+                <div class="solicitud-item">
+                    <strong>${s.tipo}</strong> - ${s.descripcion} <br>
+                    <small>${new Date(s.fecha).toLocaleString()}</small>
+                    <div><button class="btn btn-primary" onclick="asignar(${s.id})">Asignarme</button></div>
+                </div>
+            `).join('');
+        }
+
+        async function asignar(id) {
+            showNotification('Funcionalidad de asignación no implementada en demo', 'info');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!authManager.isAuthenticated() || authManager.getUserType() !== 'trabajadores') {
+                window.location.href = '/trabajadores/login.html';
+                return;
+            }
+
+            cargarSolicitudes();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,151 @@
+/* Estilos específicos para trabajador */
+.dashboard-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+}
+
+.stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    border-left: 4px solid var(--primary);
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: var(--primary);
+    display: block;
+}
+
+.stat-label {
+    color: var(--gray);
+    font-size: 0.9rem;
+}
+
+.solicitudes-list {
+    margin: 2rem 0;
+}
+
+.solicitud-item {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    border-left: 4px solid var(--warning);
+    transition: transform 0.2s ease;
+}
+
+.solicitud-item:hover {
+    transform: translateX(5px);
+}
+
+.solicitud-item.aceptada {
+    border-left-color: var(--success);
+}
+
+.solicitud-item.completada {
+    border-left-color: var(--secondary);
+}
+
+.solicitud-header {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.solicitud-tipo {
+    background: var(--primary);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.solicitud-estado {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.estado-pendiente {
+    background: var(--warning);
+    color: var(--dark);
+}
+
+.estado-aceptada {
+    background: var(--success);
+    color: white;
+}
+
+.estado-completada {
+    background: var(--secondary);
+    color: white;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.btn-sm {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+}
+
+.calendar-widget {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin: 2rem 0;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+}
+
+.calendar-day {
+    padding: 10px;
+    text-align: center;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.calendar-day:hover {
+    background: #f8f9fa;
+}
+
+.calendar-day.active {
+    background: var(--primary);
+    color: white;
+}
+
+.rating-stars {
+    color: var(--warning);
+    font-size: 1.2rem;
+}
