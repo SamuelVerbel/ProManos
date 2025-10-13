@@ -19,9 +19,16 @@ app.use('/public', express.static(path.join(__dirname, 'public')));
 // Habilitar CORS (útil si frontend está desplegado en otra URL)
 app.use(cors());
 
+// Logger simple (temporal) para depurar peticiones que causan ENOENT en Render
+app.use((req, res, next) => {
+    console.log('[REQ]', req.method, req.url);
+    next();
+});
+
 // Servir páginas HTML
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'index.html'));
+    // El archivo `index.html` está en la raíz del proyecto (no dentro de `views/`)
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.get('/clientes', (req, res) => {
@@ -148,6 +155,19 @@ app.get('/api/solicitudes', (req, res) => {
     } catch (error) {
         res.status(500).json({ success: false, mensaje: 'Error al obtener solicitudes' });
     }
+});
+
+// Fallback para servir la SPA / página principal en rutas desconocidas (si es GET servimos index.html)
+app.get('*', (req, res) => {
+    if (req.method === 'GET') {
+        return res.sendFile(path.join(__dirname, 'index.html'), (err) => {
+            if (err) {
+                console.error('Error sirviendo index.html:', err);
+                return res.status(500).send('Server error');
+            }
+        });
+    }
+    res.status(404).send('Not Found');
 });
 
 app.listen(PORT, () => {
