@@ -29,6 +29,11 @@ app.get('/clientes', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'clientes', 'index.html'));
 });
 
+// Ruta explícita para el registro de trabajadores (asegura que el archivo se sirva)
+app.get('/trabajadores/registro.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'trabajador', 'registro.html'));
+});
+
 // Servir dashboard y archivos estáticos dentro de las carpetas de views para rutas amigables
 app.use('/clientes', express.static(path.join(__dirname, 'views', 'clientes')));
 app.use('/trabajadores', express.static(path.join(__dirname, 'views', 'trabajador')));
