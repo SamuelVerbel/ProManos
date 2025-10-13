@@ -19,12 +19,6 @@ app.use('/public', express.static(path.join(__dirname, 'public')));
 // Habilitar CORS (útil si frontend está desplegado en otra URL)
 app.use(cors());
 
-// Logger simple (temporal) para depurar peticiones que causan ENOENT en Render
-app.use((req, res, next) => {
-    console.log('[REQ]', req.method, req.url);
-    next();
-});
-
 // Servir páginas HTML
 app.get('/', (req, res) => {
     // El archivo `index.html` está en la raíz del proyecto (no dentro de `views/`)
