@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login Trabajador - ProManos</title>
-    <link rel="stylesheet" href="/css/main.css">
-    <link rel="stylesheet" href="/css/trabajador.css">
+    <link rel="stylesheet" href="/public/css/main.css">
+    <link rel="stylesheet" href="/public/css/trabajador.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -39,7 +39,7 @@
             </form>
 
             <div class="text-center mt-3">
-                <p>¿No tienes cuenta? <a href="trabajador/registro.html">Regístrate aquí</a></p>
+                <p>¿No tienes cuenta? <a href="registro.html">Regístrate aquí</a></p>
                 <p><a href="/">← Volver al inicio</a></p>
             </div>
 
@@ -47,7 +47,7 @@
         </div>
     </div>
 
-    <script src="js/auth.js"></script>
+    <script src="/public/js/auth.js"></script>
     <script>
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -56,7 +56,7 @@
             const password = document.getElementById('password').value;
             const mensaje = document.getElementById('mensaje');
 
-            const result = await authManager.login('trabajador', email, password);
+            const result = await authManager.login('trabajadores', email, password);
             
             if (result.success) {
                 showNotification('✅ Login exitoso!', 'success');
@@ -69,7 +69,7 @@
         });
 
         // Verificar si ya está logueado
-        if (authManager.isAuthenticated() && authManager.getUserType() === 'trabajador') {
+        if (authManager.isAuthenticated() && authManager.getUserType() === 'trabajadores') {
             window.location.href = 'dashboard.html';
         }
     </script>

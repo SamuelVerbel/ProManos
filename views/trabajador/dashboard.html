@@ -45,8 +45,8 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            if (!authManager.isAuthenticated() || authManager.getUserType() !== 'trabajador') {
-                window.location.href = '/trabajador/login.html';
+            if (!authManager.isAuthenticated() || authManager.getUserType() !== 'trabajadores') {
+                window.location.href = '/trabajadores/login.html';
                 return;
             }
 

@@ -1,8 +1,0 @@
-node_modules/
-.env
-*.log
-/*.zip
-/.DS_Store
-ProManos_remote/
-ProManos_remote.zip
-    

@@ -6,9 +6,7 @@ class AuthManager {
 
     async login(tipo, email, password) {
         try {
-            // Para login de trabajadores usar 'trabajador' en la ruta pero 'trabajadores' en el archivo
-            const tipoRuta = tipo === 'trabajadores' ? 'trabajador' : tipo;
-            const response = await fetch(`/api/login/${tipoRuta}`, {
+            const response = await fetch(`/api/login/${tipo}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -37,8 +35,7 @@ class AuthManager {
 
     async register(tipo, userData) {
         try {
-            const tipoRuta = tipo === 'trabajadores' ? 'trabajador' : tipo;
-            const response = await fetch(`/api/registro/${tipoRuta}`, {
+            const response = await fetch(`/api/registro/${tipo}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
