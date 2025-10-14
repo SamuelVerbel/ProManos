@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro Trabajador - ProManos</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/trabajador.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container" style="min-height: 100vh; display: flex; align-items: center; justify-content: center;">
+        <div class="card" style="max-width: 500px; width: 100%;">
+            <div class="text-center mb-3">
+                <h2><i class="fas fa-hard-hat"></i> Registro Trabajador</h2>
+                <p>Únete a nuestra red de profesionales</p>
+            </div>
+
+            <form id="registroForm">
+                <div class="form-group">
+                    <label for="nombre" class="form-label">Nombre Completo</label>
+                    <input type="text" id="nombre" class="form-control" placeholder="Tu nombre completo" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" id="email" class="form-control" placeholder="tu@email.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="telefono" class="form-label">Teléfono</label>
+                    <input type="tel" id="telefono" class="form-control" placeholder="3001234567" pattern="[0-9]{10}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="especialidad" class="form-label">Especialidad</label>
+                    <select id="especialidad" class="form-control" required>
+                        <option value="">Selecciona tu especialidad</option>
+                        <option value="albañil">Albañilería</option>
+                        <option value="plomero">Plomería</option>
+                        <option value="electricista">Electricidad</option>
+                        <option value="pintor">Pintura</option>
+                        <option value="carpintero">Carpintería</option>
+                        <option value="herrero">Herrería</option>
+                        <option value="drywall">Drywall</option>
+                        <option value="techador">Techador</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="experiencia" class="form-label">Años de Experiencia</label>
+                    <input type="number" id="experiencia" class="form-control" placeholder="Ej: 5" min="0" max="50" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="descripcion" class="form-label">Descripción Profesional</label>
+                    <textarea id="descripcion" class="form-control" rows="3" placeholder="Breve descripción de tus habilidades y experiencia..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">Contraseña</label>
+                    <div style="position: relative;">
+                        <input type="password" id="password" class="form-control" placeholder="Mínimo 6 caracteres" minlength="6" required>
+                        <span style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer;" 
+                              onclick="togglePassword('password')">
+                            <i class="fas fa-eye"></i>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword" class="form-label">Confirmar Contraseña</label>
+                    <input type="password" id="confirmPassword" class="form-control" placeholder="Repite tu contraseña" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-user-plus"></i> Crear Cuenta Profesional
+                </button>
+            </form>
+
+            <div class="text-center mt-3">
+                <p>¿Ya tienes cuenta? <a href="login.html">Inicia sesión aquí</a></p>
+                <p><a href="/">← Volver al inicio</a></p>
+            </div>
+
+            <div id="mensaje"></div>
+        </div>
+    </div>
+
+    <script src="/js/auth.js"></script>
+    <script>
+        document.getElementById('registroForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const nombre = document.getElementById('nombre').value;
+            const email = document.getElementById('email').value;
+            const telefono = document.getElementById('telefono').value;
+            const especialidad = document.getElementById('especialidad').value;
+            const experiencia = document.getElementById('experiencia').value;
+            const descripcion = document.getElementById('descripcion').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const mensaje = document.getElementById('mensaje');
+
+            // Validaciones
+            if (password !== confirmPassword) {
+                mensaje.innerHTML = '<div class="alert alert-danger">Las contraseñas no coinciden</div>';
+                return;
+            }
+
+            if (password.length < 6) {
+                mensaje.innerHTML = '<div class="alert alert-danger">La contraseña debe tener al menos 6 caracteres</div>';
+                return;
+            }
+
+            if (!especialidad) {
+                mensaje.innerHTML = '<div class="alert alert-danger">Selecciona tu especialidad</div>';
+                return;
+            }
+
+            const userData = {
+                nombre,
+                email,
+                telefono,
+                especialidad,
+                experiencia: parseInt(experiencia),
+                descripcion,
+                password
+            };
+
+            const result = await authManager.register('trabajadores', userData);
+            
+            if (result.success) {
+                mensaje.innerHTML = '<div class="alert alert-success">✅ Cuenta profesional creada exitosamente. Redirigiendo...</div>';
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+            } else {
+                mensaje.innerHTML = `<div class="alert alert-danger">${result.mensaje}</div>`;
+            }
+        });
+    </script>
+</body>
+</html>
