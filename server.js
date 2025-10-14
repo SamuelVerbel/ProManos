@@ -33,7 +33,7 @@ app.get('/clientes/dashboard', (req, res) => {
 });
 
 app.get('/trabajador/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views/trabajadores/login.html'));
+    res.sendFile(path.join(__dirname, 'views/trabajador/login.html'));
 });
 
 app.get('/trabajador/registro', (req, res) => {
