@@ -25,6 +25,12 @@ app.use((req, res, next) => {
     next();
 });
 
+// Ruta de prueba - TEMPORAL
+app.get('/test', (req, res) => {
+    res.sendFile(path.join(__dirname, 'test.html'));
+});
+
+
 // Servir páginas HTML
 app.get('/', (req, res) => {
     // El archivo `index.html` está en la raíz del proyecto (no dentro de `views/`)
