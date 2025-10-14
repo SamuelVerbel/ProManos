@@ -32,16 +32,16 @@ app.get('/clientes/dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, 'views/clientes/index.html'));
 });
 
-app.get('/trabajadores/login', (req, res) => {
+app.get('/trabajador/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'views/trabajadores/login.html'));
 });
 
-app.get('/trabajadores/registro', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views/trabajadores/registro.html'));
+app.get('/trabajador/registro', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views/trabajador/registro.html'));
 });
 
-app.get('/trabajadores/dashboard', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views/trabajadores/dashboard.html'));
+app.get('/trabajador/dashboard', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views/trabajador/dashboard.html'));
 });
 
 // API Routes - CORREGIDAS
