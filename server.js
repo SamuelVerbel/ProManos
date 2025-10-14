@@ -42,6 +42,35 @@ app.get('/clientes', (req, res) => {
 });
 
 // Servir dashboard y archivos estáticos dentro de las carpetas de views para rutas amigables
+// ======== AGREGAR ESTAS RUTAS ========
+
+// Rutas específicas para archivos HTML de trabajadores
+app.get('/trabajadores/login.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'trabajador', 'login.html'));
+});
+
+app.get('/trabajadores/registro.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'trabajador', 'registro.html'));
+});
+
+app.get('/trabajadores/dashboard.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'trabajador', 'dashboard.html'));
+});
+
+// Rutas específicas para archivos HTML de clientes
+app.get('/clientes/login.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'clientes', 'login.html'));
+});
+
+app.get('/clientes/registro.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'clientes', 'registro.html'));
+});
+
+app.get('/clientes/index.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'clientes', 'index.html'));
+});
+
+// ======== LUEGO MANTIENES ESTO ========
 app.use('/clientes', express.static(path.join(__dirname, 'views', 'clientes')));
 app.use('/trabajadores', express.static(path.join(__dirname, 'views', 'trabajador')));
 

@@ -1,57 +1,104 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Trabajador - ProManos</title>
-    <link rel="stylesheet" href="/public/css/main.css">
-    <link rel="stylesheet" href="/public/css/trabajador.css">
-    <script src="/public/js/auth.js"></script>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/trabajador.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <header class="container">
-        <h1>Panel de Trabajador</h1>
-        <button class="btn btn-outline" onclick="authManager.logout()">Cerrar sesión</button>
+    <header class="dashboard-header">
+        <div class="container">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1 style="margin: 0;">
+                        <i class="fas fa-hard-hat"></i> Panel del Trabajador
+                    </h1>
+                    <p style="margin: 0; opacity: 0.9;" id="welcomeMessage">Bienvenido</p>
+                </div>
+                <nav>
+                    <a href="/" class="btn btn-outline" style="margin-right: 10px;">
+                        <i class="fas fa-home"></i> Inicio
+                    </a>
+                    <button class="btn btn-outline" onclick="authManager.logout()">
+                        <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                    </button>
+                </nav>
+            </div>
+        </div>
     </header>
 
-    <main class="container">
-        <section class="card">
-            <h3>Solicitudes disponibles</h3>
-            <div id="solicitudesList">Cargando...</div>
-        </section>
+    <main class="container" style="padding: 2rem 0;">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-number" id="stat-total">0</span>
+                <span class="stat-label">Total Solicitudes</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" id="stat-pendientes">0</span>
+                <span class="stat-label">Pendientes</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" id="stat-aceptadas">0</span>
+                <span class="stat-label">Aceptadas</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" id="stat-completadas">0</span>
+                <span class="stat-label">Completadas</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3><i class="fas fa-list"></i> Solicitudes Disponibles</h3>
+            <div id="solicitudesContainer">
+                <p>Cargando solicitudes...</p>
+            </div>
+        </div>
+
+        <div class="row" style="margin-top: 2rem;">
+            <div class="col-6">
+                <div class="card">
+                    <h3><i class="fas fa-calendar"></i> Próximos Trabajos</h3>
+                    <div id="proximosTrabajos">
+                        <p>No tienes trabajos programados</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="card">
+                    <h3><i class="fas fa-chart-line"></i> Mi Perfil</h3>
+                    <div id="perfilInfo">
+                        <p><strong>Especialidad:</strong> <span id="perfilEspecialidad">-</span></p>
+                        <p><strong>Experiencia:</strong> <span id="perfilExperiencia">-</span> años</p>
+                        <p><strong>Calificación:</strong> <span id="perfilCalificacion">-</span>/5 ⭐</p>
+                        <a href="#" class="btn btn-outline" style="margin-top: 1rem;">
+                            <i class="fas fa-edit"></i> Editar Perfil
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 
+    <script src="/js/auth.js"></script>
+    <script src="/js/trabajador.js"></script>
     <script>
-        async function cargarSolicitudes() {
-            const res = await fetch('/api/solicitudes');
-            const solicitudes = await res.json();
-            const container = document.getElementById('solicitudesList');
-            if (!solicitudes.length) {
-                container.innerHTML = '<p>No hay solicitudes</p>';
-                return;
-            }
-
-            container.innerHTML = solicitudes.map(s => `
-                <div class="solicitud-item">
-                    <strong>${s.tipo}</strong> - ${s.descripcion} <br>
-                    <small>${new Date(s.fecha).toLocaleString()}</small>
-                    <div><button class="btn btn-primary" onclick="asignar(${s.id})">Asignarme</button></div>
-                </div>
-            `).join('');
+        // Verificar autenticación
+        if (!authManager.checkAuth('trabajadores')) {
+            // Redirige automáticamente si no está autenticado
         }
 
-        async function asignar(id) {
-            showNotification('Funcionalidad de asignación no implementada en demo', 'info');
+        // Mostrar información del usuario
+        document.getElementById('welcomeMessage').textContent = 
+            `Bienvenido, ${authManager.user?.nombre || 'Trabajador'}`;
+        
+        // Mostrar información del perfil
+        if (authManager.user) {
+            document.getElementById('perfilEspecialidad').textContent = 
+                authManager.user.especialidad || 'No especificada';
         }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            if (!authManager.isAuthenticated() || authManager.getUserType() !== 'trabajadores') {
-                window.location.href = '/trabajadores/login.html';
-                return;
-            }
-
-            cargarSolicitudes();
-        });
     </script>
 </body>
 </html>
