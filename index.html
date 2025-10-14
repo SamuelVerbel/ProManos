@@ -7,10 +7,8 @@
     <link rel="stylesheet" href="/public/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
     
 </head>
-
 <body>
     <!-- Banner de Location y Contacto -->
         <div class="location-contact-banner">
@@ -37,11 +35,11 @@
                     <p style="margin: 0; opacity: 0.9;">Conectando talento y confianza en la construcción</p>
                 </div>
                 <nav>
-                    <a href="/clientes/login.html" class="btn btn-outline" style="margin-right: 10px;">
-                        <i class="fas fa-user"></i> Clientes
+                    <a href="/clientes/registro.html" class="btn btn-outline" style="margin-right: 10px;">
+                        <i class="fas fa-user"></i> Soy Cliente
                     </a>
-                    <a href="/trabajadores/login.html" class="btn btn-outline">
-                        <i class="fas fa-hard-hat"></i> Trabajadores
+                    <a href="/trabajadores/registro.html" class="btn btn-outline">
+                        <i class="fas fa-hard-hat"></i> Soy Profesional
                     </a>
                 </nav>
             </div>
@@ -49,19 +47,40 @@
     </header>
 
     <main>
-        <section class="hero-section">
+         <section class="hero-section">
             <div class="container">
                 <div class="animate-fade-in-up">
-                    <h1 class="hero-title">Encuentra al profesional perfecto para tu proyecto</h1>
-                    <p class="hero-subtitle">Más de 500 albañiles, plomeros y electricistas confiables a tu disposición</p>
+                    <h1 class="hero-title">¿Necesitas un profesional de confianza para tu proyecto en Cartagena?</h1>
+                    <p class="hero-subtitle">Encuentra al <strong>albañil, plomero o electricista</strong> perfecto. Más de 500 profesionales verificados listos para ayudarte.</p>
+                    
+                    <div class="hero-stats">
+                        <div class="stat">
+                            <span class="stat-number">500+</span>
+                            <span class="stat-label">Profesionales</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">24h</span>
+                            <span class="stat-label">Respuesta</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">100%</span>
+                            <span class="stat-label">Verificados</span>
+                        </div>
+                    </div>
                     
                     <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 3rem;">
-                        <a href="/clientes/login.html" class="btn btn-primary" style="padding: 15px 30px; font-size: 1.1rem;">
-                            <i class="fas fa-search"></i> Buscar Profesionales
+                        <a href="/clientes/registro.html" class="btn btn-primary" style="padding: 15px 30px; font-size: 1.1rem;">
+                            <i class="fas fa-search"></i> Encontrar Profesional
                         </a>
-                        <a href="/trabajadores/login.html" class="btn btn-outline" style="padding: 15px 30px; font-size: 1.1rem;">
-                            <i class="fas fa-briefcase"></i> Ofrecer Servicios
+                        <a href="/trabajadores/registro.html" class="btn btn-outline" style="padding: 15px 30px; font-size: 1.1rem;">
+                            <i class="fas fa-briefcase"></i> Ofrecer Mis Servicios
                         </a>
+                    </div>
+                    
+                    <div class="trust-badges" style="margin-top: 2rem;">
+                        <span><i class="fas fa-shield-alt"></i> Profesionales Verificados</span>
+                        <span><i class="fas fa-star"></i> Calificaciones Reales</span>
+                        <span><i class="fas fa-lock"></i> Pago Seguro</span>
                     </div>
                 </div>
             </div>
@@ -75,7 +94,10 @@
                     Mira algunos de los proyectos que hemos realizado con nuestros profesionales
                 </p>
                 
+                <!-- Imagenes de referencia -->
                 <div class="gallery-grid">
+
+                    <!-- Imagen 1 -->
                     <div class="gallery-item">
                         <img src="/public/images/albanil-trabajando.jpg" alt="Albañil trabajando en construcción" onerror="this.src='https://images.unsplash.com/photo-1541888946425-d81bb19240f5?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'">
                         <div class="gallery-caption">
@@ -83,7 +105,8 @@
                             <p>Albañiles especializados en obras nuevas</p>
                         </div>
                     </div>
-                    
+
+                    <!-- Imagen 2 -->
                     <div class="gallery-item">
                         <img src="/public/images/electricista-instalando.jpg" alt="Electricista instalando cables" onerror="this.src='https://images.unsplash.com/photo-1621905252507-b35492cc74b4?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'">
                         <div class="gallery-caption">
@@ -91,7 +114,8 @@
                             <p>Electricistas certificados y seguros</p>
                         </div>
                     </div>
-                    
+
+                    <!-- Imagen 3 -->
                     <div class="gallery-item">
                         <img src="/public/images/fontanero-reparando.jpg" alt="Fontanero reparando tuberías" onerror="this.src='https://images.unsplash.com/photo-1581091226033-d5c48150dbaa?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'">
                         <div class="gallery-caption">
@@ -99,7 +123,8 @@
                             <p>Soluciones rápidas para problemas de agua</p>
                         </div>
                     </div>
-                    
+
+                    <!-- Imagen 4 -->
                     <div class="gallery-item">
                         <img src="https://media.istockphoto.com/id/1189913170/es/foto/apret%C3%B3n-de-manos-de-ingeniero-y-empresario-en-la-obra.jpg?s=612x612&w=0&k=20&c=1i9hu1E29FGGXz4ybZmE2sdGf9BMBI3O0VV57fbun78=" alt="Manos estrechándose">
                         <div class="gallery-caption">
@@ -108,7 +133,7 @@
                         </div>
                     </div>
 
-                    <!-- NUEVAS IMÁGENES -->
+                    <!-- Imagen 5 -->
                     <div class="gallery-item">
                         <img src="https://images.unsplash.com/photo-1504307651254-35680f356dfd?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Pintor profesional trabajando">
                         <div class="gallery-caption">
@@ -117,6 +142,7 @@
                         </div>
                     </div>
 
+                    <!-- Imagen 6 -->
                     <div class="gallery-item">
                         <img src="https://karkres.com/wp-content/uploads/2023/05/muebles-a-medida.jpg" alt="Carpintero midiendo madera">
                         <div class="gallery-caption">
@@ -166,37 +192,99 @@
 
         <section style="background: white; padding: 4rem 0;">
             <div class="container">
-                <h2 style="text-align: center; margin-bottom: 3rem;">Cómo funciona</h2>
-                <div class="row">
-                    <div class="col-6">
-                        <div class="card">
-                            <h3><i class="fas fa-clipboard-list"></i> Para Clientes</h3>
-                            <ol style="margin-left: 20px; margin-top: 1rem;">
-                                <li>Regístrate gratis en la plataforma</li>
-                                <li>Describe el trabajo que necesitas</li>
-                                <li>Recibe propuestas de profesionales</li>
-                                <li>Elige al mejor y contrata</li>
-                                <li>Califica el servicio recibido</li>
-                            </ol>
-                            <a href="/clientes/registro.html" class="btn btn-primary" style="margin-top: 1rem;">
-                                Empezar como Cliente
-                            </a>
+                <h2 style="text-align: center; margin-bottom: 3rem; color: #2c3e50;">¿Cómo funciona ProManos?</h2>
+                
+                <div class="process-container">
+                    <!-- Para Clientes -->
+                    <div class="process-section">
+                        <div class="process-header">
+                            <div class="process-icon">
+                                <i class="fas fa-home"></i>
+                            </div>
+                            <h3>Para Clientes</h3>
+                            <p class="process-subtitle">Encuentra el profesional perfecto en 4 simples pasos</p>
                         </div>
+                        
+                        <div class="process-steps">
+                            <div class="step">
+                                <div class="step-number">1</div>
+                                <div class="step-content">
+                                    <h4>Regístrate Gratis</h4>
+                                    <p>Crea tu cuenta en 2 minutos</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">2</div>
+                                <div class="step-content">
+                                    <h4>Describe tu Proyecto</h4>
+                                    <p>Cuéntanos qué necesitas hacer</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">3</div>
+                                <div class="step-content">
+                                    <h4>Recibe Propuestas</h4>
+                                    <p>Hasta 3 profesionales te contactan</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">4</div>
+                                <div class="step-content">
+                                    <h4>Elige y Contrata</h4>
+                                    <p>Selecciona al mejor para tu trabajo</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <a href="/clientes/registro.html" class="btn btn-primary" style="width: 100%; margin-top: 2rem;">
+                            <i class="fas fa-play-circle"></i> Comenzar Ahora
+                        </a>
                     </div>
-                    <div class="col-6">
-                        <div class="card">
-                            <h3><i class="fas fa-tools"></i> Para Trabajadores</h3>
-                            <ol style="margin-left: 20px; margin-top: 1rem;">
-                                <li>Crea tu perfil profesional</li>
-                                <li>Muestra tu experiencia y trabajos</li>
-                                <li>Recibe solicitudes de clientes</li>
-                                <li>Envía tus presupuestos</li>
-                                <li>Crece tu reputación</li>
-                            </ol>
-                            <a href="/trabajadores/registro.html" class="btn btn-primary" style="margin-top: 1rem;">
-                                Unirse como Profesional
-                            </a>
+
+                    <!-- Para Trabajadores -->
+                    <div class="process-section">
+                        <div class="process-header">
+                            <div class="process-icon">
+                                <i class="fas fa-tools"></i>
+                            </div>
+                            <h3>Para Profesionales</h3>
+                            <p class="process-subtitle">Consigue más clientes y haz crecer tu negocio</p>
                         </div>
+                        
+                        <div class="process-steps">
+                            <div class="step">
+                                <div class="step-number">1</div>
+                                <div class="step-content">
+                                    <h4>Crea tu Perfil</h4>
+                                    <p>Muestra tu experiencia y trabajos</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">2</div>
+                                <div class="step-content">
+                                    <h4>Recibe Solicitudes</h4>
+                                    <p>Clientes te contactan directamente</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">3</div>
+                                <div class="step-content">
+                                    <h4>Envía Presupuestos</h4>
+                                    <p>Cotiza y gana nuevos proyectos</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">4</div>
+                                <div class="step-content">
+                                    <h4>Crece tu Reputación</h4>
+                                    <p>Recibe calificaciones y más trabajos</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <a href="/trabajadores/registro.html" class="btn btn-primary" style="width: 100%; margin-top: 2rem;">
+                            <i class="fas fa-user-plus"></i> Unirse como Profesional
+                        </a>
                     </div>
                 </div>
             </div>
