@@ -7,8 +7,26 @@
     <link rel="stylesheet" href="/public/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    
 </head>
+
 <body>
+    <!-- Banner de Location y Contacto -->
+        <div class="location-contact-banner">
+            <div class="container">
+                <div>
+                    <i class="fas fa-map-marker-alt"></i> 
+                    <strong>Servimos en Cartagena y áreas cercanas</strong>
+                </div>
+                <div class="contact-info">
+                    <i class="fas fa-envelope"></i> promanoscommunity@gmail.com | 
+                    <i class="fas fa-phone"></i> +57 3026082534 |
+                    <i class="fas fa-clock"></i> Disponibles 24/7
+                </div>
+            </div>
+        </div>
+
     <header style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem 0;">
         <div class="container">
             <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -49,6 +67,57 @@
             </div>
         </section>
 
+        <!-- NUEVA SECCIÓN: Galería de Trabajos -->
+        <section class="portfolio-gallery">
+            <div class="container">
+                <h2 class="section-title">Nuestros Trabajos en Cartagena</h2>
+                <p style="text-align: center; margin-bottom: 2rem; font-size: 1.1rem; color: #666;">
+                    Mira algunos de los proyectos que hemos realizado con nuestros profesionales
+                </p>
+                
+                <div class="gallery-grid">
+                    <div class="gallery-item">
+                        <img src="/public/images/albanil-trabajando.jpg" alt="Albañil trabajando en construcción" onerror="this.src='https://images.unsplash.com/photo-1541888946425-d81bb19240f5?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'">
+                        <div class="gallery-caption">
+                            <h4>Construcción Residencial</h4>
+                            <p>Albañiles especializados en obras nuevas</p>
+                        </div>
+                    </div>
+                    
+                    <div class="gallery-item">
+                        <img src="/public/images/electricista-instalando.jpg" alt="Electricista instalando cables" onerror="this.src='https://images.unsplash.com/photo-1621905252507-b35492cc74b4?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'">
+                        <div class="gallery-caption">
+                            <h4>Instalaciones Eléctricas</h4>
+                            <p>Electricistas certificados y seguros</p>
+                        </div>
+                    </div>
+                    
+                    <div class="gallery-item">
+                        <img src="/public/images/fontanero-reparando.jpg" alt="Fontanero reparando tuberías" onerror="this.src='https://images.unsplash.com/photo-1581091226033-d5c48150dbaa?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'">
+                        <div class="gallery-caption">
+                            <h4>Reparaciones de Fontanería</h4>
+                            <p>Soluciones rápidas para problemas de agua</p>
+                        </div>
+                    </div>
+                    
+                    <div class="gallery-item">
+                        <img src="/public/images/manos-estrechando.jpg" alt="Cliente y trabajador estrechando manos" onerror="this.src='https://images.unsplash.com/photo-1558618666-fcd25856cd63?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'">
+                        <div class="gallery-caption">
+                            <h4>Trabajo Concluido</h4>
+                            <p>Clientes satisfechos con nuestros servicios</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 3rem;">
+                    <a href="/clientes/registro.html" class="btn btn-primary" style="padding: 12px 30px;">
+                        <i class="fas fa-images"></i> Ver Más Proyectos
+                    </a>
+                </div>
+            </div>
+        </section>
+        <!-- FIN NUEVA SECCIÓN -->
+         
         <section class="container" style="padding: 4rem 0;">
             <h2 style="text-align: center; margin-bottom: 3rem; color: white;">¿Por qué elegir ProManos?</h2>
             <div class="feature-grid">
@@ -119,11 +188,15 @@
 
     <footer style="background: #333; color: white; padding: 2rem 0; text-align: center;">
         <div class="container">
-            <p>&copy; 2025 ProManos - UNICOLOMBO. Todos los derechos reservados.</p>
+            <p>&copy; 2025 ProManos - UNICOLOMBO.</p>
+            <div style="margin: 1rem 0;">
+                <strong><i class="fas fa-map-marker-alt"></i> Cartagena, Colombia</strong>
+            </div>
             <p style="margin-top: 1rem; opacity: 0.8;">
                 <i class="fas fa-envelope"></i> promanoscommunity@gmail.com | 
                 <i class="fas fa-phone"></i> +57 3026082534
             </p>
+            <p>Todos los derechos reservados.</p>
         </div>
     </footer>
 
