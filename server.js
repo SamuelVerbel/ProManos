@@ -3,54 +3,55 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
+
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 10000;
 
 // Middleware
 app.use(bodyParser.json());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Servir archivos estáticos desde las carpetas correctas
+// Servir archivos estáticos
 app.use('/css', express.static(path.join(__dirname, 'public/css')));
 app.use('/js', express.static(path.join(__dirname, 'public/js')));
-app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
-// Servir páginas HTML - RUTAS CORREGIDAS
+// SERVIR ARCHIVOS HTML - RUTAS CORREGIDAS
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'views/index.html'));
 });
 
-app.get('/clientes/login', (req, res) => {
+// Rutas para clientes
+app.get('/clientes/login.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'views/clientes/login.html'));
 });
 
-app.get('/clientes/registro', (req, res) => {
+app.get('/clientes/registro.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'views/clientes/registro.html'));
 });
 
-app.get('/clientes/dashboard', (req, res) => {
+app.get('/clientes/index.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'views/clientes/index.html'));
 });
 
-app.get('/trabajador/login', (req, res) => {
+// Rutas para trabajadores - CORREGIDAS (trabajador en singular)
+app.get('/trabajadores/login.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'views/trabajador/login.html'));
 });
 
-app.get('/trabajador/registro', (req, res) => {
+app.get('/trabajadores/registro.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'views/trabajador/registro.html'));
 });
 
-app.get('/trabajador/dashboard', (req, res) => {
+app.get('/trabajadores/dashboard.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'views/trabajador/dashboard.html'));
 });
 
-// API Routes - CORREGIDAS
+// API Routes
 app.post('/api/registro/:tipo', (req, res) => {
     const { tipo } = req.params;
     const { nombre, email, password, especialidad, telefono, experiencia, descripcion } = req.body;
     
-    // Usar trabajadores.json en lugar de trabajador.json
-    const archivo = `data/${tipo === 'trabajador' ? 'trabajadores' : tipo}.json`;
+    const archivo = `data/${tipo}.json`;
     let usuarios = [];
     
     try {
@@ -58,12 +59,10 @@ app.post('/api/registro/:tipo', (req, res) => {
             usuarios = JSON.parse(fs.readFileSync(archivo));
         }
         
-        // Verificar si el usuario ya existe
         if (usuarios.find(u => u.email === email)) {
             return res.status(400).json({ success: false, mensaje: 'El usuario ya existe' });
         }
         
-        // Hash password
         const hashedPassword = bcrypt.hashSync(password, 10);
         
         const nuevoUsuario = {
@@ -75,8 +74,7 @@ app.post('/api/registro/:tipo', (req, res) => {
             fechaRegistro: new Date().toISOString()
         };
 
-        // Agregar campos específicos para trabajadores
-        if (tipo === 'trabajador') {
+        if (tipo === 'trabajadores') {
             nuevoUsuario.especialidad = especialidad || null;
             nuevoUsuario.experiencia = experiencia || 0;
             nuevoUsuario.descripcion = descripcion || '';
@@ -98,8 +96,7 @@ app.post('/api/login/:tipo', (req, res) => {
     const { tipo } = req.params;
     const { email, password } = req.body;
     
-    // Usar trabajadores.json en lugar de trabajador.json
-    const archivo = `data/${tipo === 'trabajador' ? 'trabajadores' : tipo}.json`;
+    const archivo = `data/${tipo}.json`;
     
     try {
         if (!fs.existsSync(archivo)) {
@@ -169,6 +166,6 @@ app.get('/api/solicitudes', (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
-    console.log(`👥 Clientes: http://localhost:${PORT}/clientes/login`);
-    console.log(`👷 Trabajadores: http://localhost:${PORT}/trabajadores/login`);
+    console.log(`📊 Clientes: http://localhost:${PORT}/clientes/login.html`);
+    console.log(`👷 Trabajadores: http://localhost:${PORT}/trabajadores/registro.html`);
 });
