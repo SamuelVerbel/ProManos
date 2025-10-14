@@ -3,51 +3,54 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const cors = require('cors');
-
 const app = express();
-const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || 'promanos_secreto_2025';
+const PORT = 3000;
 
 // Middleware
 app.use(bodyParser.json());
 app.use(express.static('public'));
-app.use('/assets', express.static('assets'));
-// Alias para mantener referencias en HTML que usan /public/...
-app.use('/public', express.static(path.join(__dirname, 'public')));
-// Habilitar CORS (útil si frontend está desplegado en otra URL)
-app.use(cors());
 
-// Servir páginas HTML
+// Servir archivos estáticos desde las carpetas correctas
+app.use('/css', express.static(path.join(__dirname, 'public/css')));
+app.use('/js', express.static(path.join(__dirname, 'public/js')));
+app.use('/assets', express.static(path.join(__dirname, 'assets')));
+
+// Servir páginas HTML - RUTAS CORREGIDAS
 app.get('/', (req, res) => {
-    // El archivo `index.html` está en la raíz del proyecto (no dentro de `views/`)
-    res.sendFile(path.join(__dirname, 'index.html'));
+    res.sendFile(path.join(__dirname, 'views/index.html'));
 });
 
-app.get('/clientes', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'clientes', 'index.html'));
+app.get('/clientes/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views/clientes/login.html'));
 });
 
-// Ruta explícita para el registro de trabajadores (asegura que el archivo se sirva)
-app.get('/trabajador/registro.html', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'trabajador', 'registro.html'));
+app.get('/clientes/registro', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views/clientes/registro.html'));
 });
 
-// Servir dashboard y archivos estáticos dentro de las carpetas de views para rutas amigables
-app.use('/clientes', express.static(path.join(__dirname, 'views', 'clientes')));
-app.use('/trabajador', express.static(path.join(__dirname, 'views', 'trabajador')));
-
-app.get('/trabajador', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'trabajador', 'dashboard.html'));
+app.get('/clientes/dashboard', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views/clientes/index.html'));
 });
 
-// API Routes
+app.get('/trabajadores/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views/trabajadores/login.html'));
+});
+
+app.get('/trabajadores/registro', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views/trabajadores/registro.html'));
+});
+
+app.get('/trabajadores/dashboard', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views/trabajadores/dashboard.html'));
+});
+
+// API Routes - CORREGIDAS
 app.post('/api/registro/:tipo', (req, res) => {
     const { tipo } = req.params;
-    const { nombre, email, password, especialidad, telefono } = req.body;
+    const { nombre, email, password, especialidad, telefono, experiencia, descripcion } = req.body;
     
-    const archivo = `data/${tipo}.json`;
+    // Usar trabajadores.json en lugar de trabajador.json
+    const archivo = `data/${tipo === 'trabajador' ? 'trabajadores' : tipo}.json`;
     let usuarios = [];
     
     try {
@@ -68,16 +71,25 @@ app.post('/api/registro/:tipo', (req, res) => {
             nombre,
             email,
             password: hashedPassword,
-            especialidad: especialidad || null,
             telefono: telefono || null,
             fechaRegistro: new Date().toISOString()
         };
+
+        // Agregar campos específicos para trabajadores
+        if (tipo === 'trabajador') {
+            nuevoUsuario.especialidad = especialidad || null;
+            nuevoUsuario.experiencia = experiencia || 0;
+            nuevoUsuario.descripcion = descripcion || '';
+            nuevoUsuario.calificacion = 0;
+            nuevoUsuario.trabajosCompletados = 0;
+        }
         
         usuarios.push(nuevoUsuario);
         fs.writeFileSync(archivo, JSON.stringify(usuarios, null, 2));
         
         res.json({ success: true, mensaje: 'Registro exitoso' });
     } catch (error) {
+        console.error('Error en registro:', error);
         res.status(500).json({ success: false, mensaje: 'Error del servidor' });
     }
 });
@@ -86,7 +98,8 @@ app.post('/api/login/:tipo', (req, res) => {
     const { tipo } = req.params;
     const { email, password } = req.body;
     
-    const archivo = `data/${tipo}.json`;
+    // Usar trabajadores.json en lugar de trabajador.json
+    const archivo = `data/${tipo === 'trabajador' ? 'trabajadores' : tipo}.json`;
     
     try {
         if (!fs.existsSync(archivo)) {
@@ -100,20 +113,17 @@ app.post('/api/login/:tipo', (req, res) => {
             return res.status(400).json({ success: false, mensaje: 'Credenciales incorrectas' });
         }
         
-        // Generar token
-        const token = jwt.sign(
-            { id: usuario.id, email: usuario.email, tipo: tipo }, 
-            JWT_SECRET, 
-            { expiresIn: '24h' }
-        );
-        
         res.json({ 
             success: true, 
-            mensaje: 'Login exitoso', 
-            token,
-            usuario: { nombre: usuario.nombre, email: usuario.email, especialidad: usuario.especialidad }
+            mensaje: 'Login exitoso',
+            usuario: { 
+                nombre: usuario.nombre, 
+                email: usuario.email, 
+                especialidad: usuario.especialidad 
+            }
         });
     } catch (error) {
+        console.error('Error en login:', error);
         res.status(500).json({ success: false, mensaje: 'Error del servidor' });
     }
 });
@@ -140,6 +150,7 @@ app.post('/api/solicitudes', (req, res) => {
         
         res.json({ success: true, mensaje: 'Solicitud creada exitosamente', id: nuevaSolicitud.id });
     } catch (error) {
+        console.error('Error creando solicitud:', error);
         res.status(500).json({ success: false, mensaje: 'Error al crear solicitud' });
     }
 });
@@ -156,21 +167,8 @@ app.get('/api/solicitudes', (req, res) => {
     }
 });
 
-// Fallback para servir la SPA / página principal en rutas desconocidas (si es GET servimos index.html)
-app.get('*', (req, res) => {
-    if (req.method === 'GET') {
-        return res.sendFile(path.join(__dirname, 'index.html'), (err) => {
-            if (err) {
-                console.error('Error sirviendo index.html:', err);
-                return res.status(500).send('Server error');
-            }
-        });
-    }
-    res.status(404).send('Not Found');
-});
-
 app.listen(PORT, () => {
     console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
-    console.log(`📊 Panel de cliente: http://localhost:${PORT}/clientes`);
-    console.log(`👷 Panel de trabajador: http://localhost:${PORT}/trabajadores`);
-}); 
+    console.log(`👥 Clientes: http://localhost:${PORT}/clientes/login`);
+    console.log(`👷 Trabajadores: http://localhost:${PORT}/trabajadores/login`);
+});
