@@ -13,6 +13,7 @@ class ClienteManager {
         await this.cargarSolicitudes();
         this.setupEventListeners();
         this.mostrarInfoUsuario();
+        this.cargarEstadisticas();
     }
 
     setupEventListeners() {
@@ -20,60 +21,41 @@ class ClienteManager {
         if (serviceForm) {
             serviceForm.addEventListener('submit', (e) => this.crearSolicitud(e));
         }
-
-        // Botón de logout
-        const logoutBtn = document.getElementById('logoutBtn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', () => authManager.logout());
-        }
-
-        // Botón de editar perfil
-        const editProfileBtn = document.getElementById('editProfileBtn');
-        if (editProfileBtn) {
-            editProfileBtn.addEventListener('click', () => this.editarPerfil());
-        }
     }
 
     mostrarInfoUsuario() {
-        const userInfo = document.getElementById('userInfo');
-        if (userInfo && authManager.user) {
-            userInfo.innerHTML = `
-                <div class="user-welcome">
-                    <h3>¡Hola, ${authManager.user.nombre}!</h3>
-                    <p>Bienvenido a tu panel de cliente</p>
-                </div>
-            `;
+        const welcomeMessage = document.getElementById('welcomeMessage');
+        if (welcomeMessage && authManager.user) {
+            welcomeMessage.textContent = `Bienvenido, ${authManager.user.nombre || 'Cliente'}`;
         }
     }
 
     async crearSolicitud(e) {
         e.preventDefault();
         
-        const formData = new FormData(e.target);
-        const solicitud = {
-            id: Date.now().toString(),
-            tipo: formData.get('tipo'),
-            descripcion: formData.get('descripcion'),
-            direccion: formData.get('direccion'),
-            telefono: formData.get('telefono'),
-            correo: formData.get('correo'),
-            cliente: authManager.user?.nombre || 'Anónimo',
-            clienteEmail: authManager.user?.email,
-            estado: 'pendiente',
-            fecha: new Date().toISOString(),
-            presupuestos: []
+        const tipo = document.getElementById('tipo').value;
+        const descripcion = document.getElementById('descripcion').value;
+        const direccion = document.getElementById('direccion').value;
+        const telefono = document.getElementById('telefono').value;
+
+        const solicitudData = {
+            titulo: `Solicitud de ${tipo}`,
+            descripcion: descripcion,
+            oficio: tipo,
+            presupuesto: 0,
+            ubicacion: direccion
         };
 
         try {
-            // Simular envío a API (mientras no tengas backend real)
-            const response = await this.guardarSolicitudLocal(solicitud);
-
-            if (response.success) {
+            const result = await this.crearSolicitudAPI(solicitudData);
+            
+            if (result.success) {
                 showNotification('✅ Solicitud creada exitosamente', 'success');
                 e.target.reset();
                 await this.cargarSolicitudes();
+                await this.cargarEstadisticas();
             } else {
-                showNotification('❌ Error al crear solicitud', 'danger');
+                showNotification('❌ ' + (result.mensaje || 'Error al crear solicitud'), 'danger');
             }
         } catch (error) {
             console.error('Error:', error);
@@ -81,39 +63,73 @@ class ClienteManager {
         }
     }
 
-    // Función temporal para guardar localmente hasta que tengas backend
-    async guardarSolicitudLocal(solicitud) {
+    async crearSolicitudAPI(solicitudData) {
         try {
-            // Obtener solicitudes existentes
-            let solicitudes = JSON.parse(localStorage.getItem('solicitudesClientes') || '[]');
-            
-            // Agregar nueva solicitud
-            solicitudes.push(solicitud);
-            
-            // Guardar en localStorage
-            localStorage.setItem('solicitudesClientes', JSON.stringify(solicitudes));
-            
-            return { success: true, solicitud };
+            const token = authManager.token;
+            const response = await fetch('/api/solicitudes', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(solicitudData)
+            });
+
+            const data = await response.json();
+            return data;
         } catch (error) {
-            return { success: false, message: 'Error al guardar' };
+            console.error('Error al crear solicitud:', error);
+            return { success: false, mensaje: 'Error de conexión' };
         }
     }
 
     async cargarSolicitudes() {
         try {
-            // Cargar desde localStorage temporalmente
-            this.solicitudes = JSON.parse(localStorage.getItem('solicitudesClientes') || '[]');
-            
-            // Filtrar solo las solicitudes del usuario actual
-            this.solicitudes = this.solicitudes.filter(s => 
-                s.clienteEmail === authManager.user?.email
-            );
+            const token = authManager.token;
+            const response = await fetch(`/api/solicitudes?tipo=cliente&usuario_id=${authManager.user?.id}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                this.solicitudes = await response.json();
+            } else {
+                this.solicitudes = [];
+            }
             
             this.mostrarSolicitudes();
         } catch (error) {
             console.error('Error cargando solicitudes:', error);
-            showNotification('Error al cargar solicitudes', 'danger');
+            this.solicitudes = [];
+            this.mostrarSolicitudes();
         }
+    }
+
+    async cargarEstadisticas() {
+        try {
+            const token = authManager.token;
+            const response = await fetch('/api/estadisticas', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    this.mostrarEstadisticas(data.estadisticas);
+                }
+            }
+        } catch (error) {
+            console.error('Error cargando estadísticas:', error);
+        }
+    }
+
+    mostrarEstadisticas(estadisticas) {
+        document.getElementById('stat-total')?.textContent = estadisticas.total_solicitudes || 0;
+        document.getElementById('stat-pendientes')?.textContent = estadisticas.solicitudes_pendientes || 0;
+        document.getElementById('stat-completadas')?.textContent = estadisticas.solicitudes_completadas || 0;
     }
 
     mostrarSolicitudes() {
@@ -122,15 +138,10 @@ class ClienteManager {
 
         if (this.solicitudes.length === 0) {
             container.innerHTML = `
-                <div class="card text-center">
-                    <div class="card-body">
-                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                        <h3>No hay solicitudes aún</h3>
-                        <p class="text-muted">Crea tu primera solicitud de servicio</p>
-                        <a href="#serviceForm" class="btn btn-primary mt-2">
-                            <i class="fas fa-plus"></i> Crear Solicitud
-                        </a>
-                    </div>
+                <div class="text-center">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <h3>No hay solicitudes aún</h3>
+                    <p class="text-muted">Crea tu primera solicitud de servicio</p>
                 </div>
             `;
             return;
@@ -140,8 +151,8 @@ class ClienteManager {
             <div class="solicitud-card ${solicitud.estado}">
                 <div class="solicitud-header">
                     <div class="solicitud-info">
-                        <span class="solicitud-tipo badge bg-primary">${this.getTipoDisplay(solicitud.tipo)}</span>
-                        <span class="solicitud-fecha">${new Date(solicitud.fecha).toLocaleDateString('es-ES', { 
+                        <span class="solicitud-tipo badge bg-primary">${this.getTipoDisplay(solicitud.oficio)}</span>
+                        <span class="solicitud-fecha">${new Date(solicitud.fecha_creacion).toLocaleDateString('es-ES', { 
                             weekday: 'long', 
                             year: 'numeric', 
                             month: 'long', 
@@ -155,19 +166,13 @@ class ClienteManager {
                 
                 <div class="solicitud-body">
                     <p><strong>Descripción:</strong> ${solicitud.descripcion}</p>
-                    <p><strong>Dirección:</strong> ${solicitud.direccion}</p>
-                    <p><strong>Contacto:</strong> ${solicitud.telefono} | ${solicitud.correo}</p>
+                    <p><strong>Ubicación:</strong> ${solicitud.ubicacion}</p>
+                    <p><strong>Presupuesto:</strong> $${solicitud.presupuesto || '0'}</p>
                 </div>
 
-                ${solicitud.trabajadorAsignado ? `
+                ${solicitud.trabajador_asignado ? `
                     <div class="solicitud-asignado">
-                        <strong>Trabajador asignado:</strong> ${solicitud.trabajadorAsignado}
-                    </div>
-                ` : ''}
-
-                ${solicitud.presupuestos && solicitud.presupuestos.length > 0 ? `
-                    <div class="solicitud-presupuestos">
-                        <strong>Presupuestos recibidos:</strong> ${solicitud.presupuestos.length}
+                        <strong>Trabajador asignado:</strong> ${solicitud.trabajador_asignado}
                     </div>
                 ` : ''}
 
@@ -188,11 +193,11 @@ class ClienteManager {
 
     getTipoDisplay(tipo) {
         const tipos = {
-            'albanileria': 'Albañilería',
-            'electricidad': 'Electricidad',
-            'plomeria': 'Plomería',
-            'pintura': 'Pintura',
-            'carpinteria': 'Carpintería'
+            'albañil': 'Albañilería',
+            'plomero': 'Plomería',
+            'electricista': 'Electricidad',
+            'pintor': 'Pintura',
+            'carpintero': 'Carpintería'
         };
         return tipos[tipo] || tipo;
     }
@@ -202,8 +207,8 @@ class ClienteManager {
             'pendiente': '🟡 Pendiente',
             'asignado': '🔵 Asignado',
             'en_proceso': '🟠 En Proceso',
-            'completado': '✅ Completado',
-            'cancelado': '❌ Cancelado'
+            'completada': '✅ Completada',
+            'cancelada': '❌ Cancelada'
         };
         return estados[estado] || estado;
     }
@@ -214,39 +219,37 @@ class ClienteManager {
         }
 
         try {
-            // Actualizar estado en localStorage
-            let solicitudes = JSON.parse(localStorage.getItem('solicitudesClientes') || '[]');
-            solicitudes = solicitudes.map(s => 
-                s.id === id ? { ...s, estado: 'cancelado' } : s
-            );
-            localStorage.setItem('solicitudesClientes', JSON.stringify(solicitudes));
+            const token = authManager.token;
+            const response = await fetch(`/api/solicitudes/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    estado: 'cancelada'
+                })
+            });
 
-            showNotification('✅ Solicitud cancelada', 'success');
-            await this.cargarSolicitudes();
+            if (response.ok) {
+                showNotification('✅ Solicitud cancelada', 'success');
+                await this.cargarSolicitudes();
+                await this.cargarEstadisticas();
+            } else {
+                showNotification('❌ Error al cancelar solicitud', 'danger');
+            }
         } catch (error) {
-            showNotification('❌ Error al cancelar solicitud', 'danger');
+            showNotification('❌ Error de conexión', 'danger');
         }
     }
 
     verDetalles(id) {
         const solicitud = this.solicitudes.find(s => s.id === id);
         if (solicitud) {
-            alert(`Detalles de la solicitud:\n\nTipo: ${this.getTipoDisplay(solicitud.tipo)}\nDescripción: ${solicitud.descripcion}\nDirección: ${solicitud.direccion}\nEstado: ${this.getEstadoDisplay(solicitud.estado)}`);
+            alert(`Detalles de la solicitud:\n\nTipo: ${this.getTipoDisplay(solicitud.oficio)}\nDescripción: ${solicitud.descripcion}\nUbicación: ${solicitud.ubicacion}\nEstado: ${this.getEstadoDisplay(solicitud.estado)}`);
         }
-    }
-
-    editarPerfil() {
-        // Redirigir a la página de edición de perfil
-        window.location.href = 'editar-perfil.html';
     }
 }
 
-// Instancia global para acceso desde HTML
+// Instancia global
 const clienteManager = new ClienteManager();
-
-// Inicializar cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', () => {
-    if (window.location.pathname.includes('/clientes')) {
-        // Ya se inicializa automáticamente en el constructor
-    }
-});

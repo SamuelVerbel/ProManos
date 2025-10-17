@@ -1,0 +1,64 @@
+{
+  "clientes": [
+    {
+      "id": "cli_001",
+      "email": "cliente@ejemplo.com",
+      "password": "$2a$10$hashedpassword123", 
+      "nombre": "Juan Pérez",
+      "telefono": "+573001234567",
+      "direccion": "Cartagena, Colombia",
+      "fecha_registro": "2024-01-15T10:30:00Z",
+      "ultimo_login": "2024-01-20T14:25:00Z"
+    }
+  ],
+  "trabajadores": [
+    {
+      "id": "tra_001", 
+      "email": "trabajador@ejemplo.com",
+      "password": "$2a$10$hashedpassword456",
+      "nombre": "Carlos Rodríguez",
+      "telefono": "+573007654321",
+      "oficio": "Albañil",
+      "experiencia": 5,
+      "especialidades": ["Construcción", "Remodelación"],
+      "calificacion": 4.8,
+      "disponible": true,
+      "zona_servicio": ["Cartagena", "Turbaco"],
+      "fecha_registro": "2024-01-10T09:15:00Z"
+    }
+  ],
+  "solicitudes": [
+    {
+      "id": "sol_001",
+      "cliente_id": "cli_001",
+      "titulo": "Reparación de pared",
+      "descripcion": "Necesito reparar una pared que tiene grietas",
+      "oficio": "Albañil",
+      "presupuesto": 500000,
+      "ubicacion": "Cartagena, Bocagrande",
+      "fecha_creacion": "2024-01-20T08:00:00Z",
+      "estado": "pendiente", 
+      "trabajador_asignado": null,
+      "fecha_completada": null
+    }
+  ],
+  "trabajos_activos": [
+    {
+      "id": "trab_001",
+      "solicitud_id": "sol_001", 
+      "trabajador_id": "tra_001",
+      "cliente_id": "cli_001",
+      "fecha_asignacion": "2024-01-20T10:00:00Z",
+      "estado": "en_progreso",
+      "presupuesto_acordado": 450000
+    }
+  ],
+  "password_reset_tokens": [
+    {
+      "email": "usuario@ejemplo.com",
+      "token": "abc123def456",
+      "expira": "2024-01-20T15:00:00Z",
+      "usado": false
+    }
+  ]
+}

@@ -29,6 +29,7 @@ class AuthManager {
                 return { success: false, message: data.mensaje };
             }
         } catch (error) {
+            console.error('Error en login:', error);
             return { success: false, message: 'Error de conexión' };
         }
     }
@@ -44,8 +45,19 @@ class AuthManager {
             });
 
             const data = await response.json();
+            
+            if (data.success) {
+                this.token = data.token;
+                this.user = data.usuario;
+                
+                localStorage.setItem('authToken', data.token);
+                localStorage.setItem('userData', JSON.stringify(data.usuario));
+                localStorage.setItem('userType', tipo);
+            }
+            
             return data;
         } catch (error) {
+            console.error('Error en registro:', error);
             return { success: false, mensaje: 'Error de conexión' };
         }
     }
@@ -101,7 +113,6 @@ function togglePassword(inputId) {
 
 // Función para mostrar notificaciones
 function showNotification(message, type = 'success') {
-    // Crear elemento de notificación
     const notification = document.createElement('div');
     notification.className = `alert alert-${type}`;
     notification.textContent = message;
@@ -117,7 +128,6 @@ function showNotification(message, type = 'success') {
 
     document.body.appendChild(notification);
 
-    // Remover después de 5 segundos
     setTimeout(() => {
         notification.style.animation = 'fadeOut 0.5s ease-out';
         setTimeout(() => {
