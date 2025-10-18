@@ -41,8 +41,21 @@ class Database {
     // Leer datos
     read() {
         try {
+            if (!fs.existsSync(this.filePath)) {
+                return this.getInitialStructure();
+            }
+            
             const data = fs.readFileSync(this.filePath, 'utf8');
-            return JSON.parse(data);
+            const parsedData = JSON.parse(data);
+            
+            // Asegurar que tenga la estructura correcta
+            return {
+                clientes: parsedData.clientes || [],
+                trabajadores: parsedData.trabajadores || [],
+                solicitudes: parsedData.solicitudes || [],
+                trabajos_activos: parsedData.trabajos_activos || [],
+                password_reset_tokens: parsedData.password_reset_tokens || []
+            };
         } catch (error) {
             console.error('Error reading database:', error);
             return this.getInitialStructure();
@@ -313,14 +326,27 @@ class Database {
 
     // Método para debugging - ver estadísticas
     getStats() {
-        const data = this.read();
-        return {
-            total_clientes: data.clientes.length,
-            total_trabajadores: data.trabajadores.length,
-            total_solicitudes: data.solicitudes.length,
-            solicitudes_pendientes: data.solicitudes.filter(s => s.estado === 'pendiente').length,
-            trabajos_activos: data.trabajos_activos.filter(t => t.estado === 'en_progreso').length
-        };
+        try {
+            const data = this.read();
+            
+            // Asegurar que todas las propiedades existan
+            return {
+                total_clientes: data.clientes?.length || 0,
+                total_trabajadores: data.trabajadores?.length || 0,
+                total_solicitudes: data.solicitudes?.length || 0,
+                solicitudes_pendientes: data.solicitudes?.filter(s => s.estado === 'pendiente').length || 0,
+                trabajos_activos: data.trabajos_activos?.filter(t => t.estado === 'en_progreso').length || 0
+            };
+        } catch (error) {
+            console.error('Error en getStats:', error);
+            return {
+                total_clientes: 0,
+                total_trabajadores: 0,
+                total_solicitudes: 0,
+                solicitudes_pendientes: 0,
+                trabajos_activos: 0
+            };
+        }
     }
 }
 
