@@ -37,14 +37,25 @@ class ClienteManager {
         const descripcion = document.getElementById('descripcion').value;
         const direccion = document.getElementById('direccion').value;
         const telefono = document.getElementById('telefono').value;
+        const correo = document.getElementById('correo').value;
+
+        // Validar campos requeridos
+        if (!tipo || !descripcion || !direccion) {
+            showNotification('❌ Por favor completa todos los campos requeridos', 'danger');
+            return;
+        }
 
         const solicitudData = {
-            titulo: `Solicitud de ${tipo}`,
+            titulo: `Solicitud de ${this.getTipoDisplay(tipo)}`,
             descripcion: descripcion,
             oficio: tipo,
             presupuesto: 0,
-            ubicacion: direccion
+            ubicacion: direccion,
+            telefono: telefono,
+            correo: correo
         };
+
+        console.log('📤 Enviando solicitud:', solicitudData); // Debug
 
         try {
             const result = await this.crearSolicitudAPI(solicitudData);
@@ -85,8 +96,10 @@ class ClienteManager {
 
     async cargarSolicitudes() {
         try {
+            console.log('🔄 Cargando solicitudes...'); // Debug
+            
             const token = authManager.token;
-            const response = await fetch(`/api/solicitudes?tipo=cliente&usuario_id=${authManager.user?.id}`, {
+            const response = await fetch('/api/solicitudes/cliente', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -94,13 +107,15 @@ class ClienteManager {
 
             if (response.ok) {
                 this.solicitudes = await response.json();
+                console.log('✅ Solicitudes cargadas:', this.solicitudes); // Debug
             } else {
+                console.error('❌ Error en respuesta:', response.status);
                 this.solicitudes = [];
             }
             
             this.mostrarSolicitudes();
         } catch (error) {
-            console.error('Error cargando solicitudes:', error);
+            console.error('❌ Error cargando solicitudes:', error);
             this.solicitudes = [];
             this.mostrarSolicitudes();
         }
@@ -127,9 +142,9 @@ class ClienteManager {
     }
 
     mostrarEstadisticas(estadisticas) {
-        document.getElementById('stat-total')?.textContent = estadisticas.total_solicitudes || 0;
-        document.getElementById('stat-pendientes')?.textContent = estadisticas.solicitudes_pendientes || 0;
-        document.getElementById('stat-completadas')?.textContent = estadisticas.solicitudes_completadas || 0;
+        document.getElementById('stat-total').textContent = estadisticas.total_solicitudes || 0;
+        document.getElementById('stat-pendientes').textContent = estadisticas.solicitudes_pendientes || 0;
+        document.getElementById('stat-completadas').textContent = estadisticas.solicitudes_completadas || 0;
     }
 
     mostrarSolicitudes() {
@@ -152,12 +167,7 @@ class ClienteManager {
                 <div class="solicitud-header">
                     <div class="solicitud-info">
                         <span class="solicitud-tipo badge bg-primary">${this.getTipoDisplay(solicitud.oficio)}</span>
-                        <span class="solicitud-fecha">${new Date(solicitud.fecha_creacion).toLocaleDateString('es-ES', { 
-                            weekday: 'long', 
-                            year: 'numeric', 
-                            month: 'long', 
-                            day: 'numeric' 
-                        })}</span>
+                        <span class="solicitud-fecha">${new Date(solicitud.fecha_creacion).toLocaleDateString('es-ES')}</span>
                     </div>
                     <span class="solicitud-estado estado-${solicitud.estado}">
                         ${this.getEstadoDisplay(solicitud.estado)}

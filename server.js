@@ -273,13 +273,18 @@ app.post('/api/password-reset/reset', async (req, res) => {
     }
 });
 
-// SOLICITUDES
+// SOLICITUDES - CREAR NUEVA SOLICITUD
 app.post('/api/solicitudes', authenticateToken, async (req, res) => {
     try {
-        const { titulo, descripcion, oficio, presupuesto, ubicacion } = req.body;
+        const { titulo, descripcion, oficio, presupuesto, ubicacion, telefono, correo } = req.body;
 
-        if (!titulo || !descripcion || !oficio) {
-            return res.status(400).json({ success: false, mensaje: 'Título, descripción y oficio son requeridos' });
+        console.log('📝 Creando solicitud con datos:', req.body); // Debug
+
+        if (!titulo || !descripcion || !oficio || !ubicacion) {
+            return res.status(400).json({ 
+                success: false, 
+                mensaje: 'Título, descripción, oficio y ubicación son requeridos' 
+            });
         }
 
         const nuevaSolicitud = await database.createSolicitud({
@@ -288,8 +293,12 @@ app.post('/api/solicitudes', authenticateToken, async (req, res) => {
             descripcion,
             oficio,
             presupuesto: presupuesto || 0,
-            ubicacion: ubicacion || 'Cartagena'
+            ubicacion: ubicacion,
+            telefono: telefono || '',
+            correo: correo || ''
         });
+
+        console.log('✅ Solicitud creada:', nuevaSolicitud); // Debug
 
         res.json({ 
             success: true, 
@@ -298,29 +307,23 @@ app.post('/api/solicitudes', authenticateToken, async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Error al crear solicitud:', error);
+        console.error('❌ Error al crear solicitud:', error);
         res.status(500).json({ success: false, mensaje: 'Error al crear solicitud' });
     }
 });
 
-// OBTENER SOLICITUDES
-app.get('/api/solicitudes', async (req, res) => {
+// ENDPOINT PARA OBTENER SOLICITUDES DEL CLIENTE
+app.get('/api/solicitudes/cliente', authenticateToken, async (req, res) => {
     try {
-        let solicitudes = [];
-        const { tipo, usuario_id } = req.query;
-
-        if (tipo === 'cliente' && usuario_id) {
-            solicitudes = await database.getSolicitudesByCliente(usuario_id);
-        } else if (tipo === 'trabajador' && usuario_id) {
-            solicitudes = await database.getSolicitudesByTrabajador(usuario_id);
-        } else {
-            solicitudes = await database.getSolicitudesPendientes();
-        }
-
+        console.log('📋 Obteniendo solicitudes para cliente:', req.user.id); // Debug
+        
+        const solicitudes = await database.getSolicitudesByCliente(req.user.id);
+        
+        console.log('✅ Solicitudes encontradas:', solicitudes.length); // Debug
+        
         res.json(solicitudes);
-
     } catch (error) {
-        console.error('Error al obtener solicitudes:', error);
+        console.error('❌ Error al obtener solicitudes del cliente:', error);
         res.status(500).json({ success: false, mensaje: 'Error al obtener solicitudes' });
     }
 });

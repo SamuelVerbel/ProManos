@@ -48,6 +48,12 @@
                     <input type="tel" id="telefono" class="form-control" placeholder="3001234567" pattern="[0-9]{10}" required>
                 </div>
 
+                <!-- NUEVO CAMPO DIRECCIÓN -->
+                <div class="form-group">
+                    <label for="direccion" class="form-label">Dirección</label>
+                    <input type="text" id="direccion" class="form-control" placeholder="Tu dirección completa en Cartagena" required>
+                </div>
+
                 <div class="form-group">
                     <label for="password" class="form-label">Contraseña</label>
                     <div style="position: relative;">
@@ -86,6 +92,7 @@
             const nombre = document.getElementById('nombre').value;
             const email = document.getElementById('email').value;
             const telefono = document.getElementById('telefono').value;
+            const direccion = document.getElementById('direccion').value; // NUEVO
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
             const mensaje = document.getElementById('mensaje');
@@ -105,6 +112,7 @@
                 nombre,
                 email,
                 telefono,
+                direccion, // NUEVO
                 password
             };
 

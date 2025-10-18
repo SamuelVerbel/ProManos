@@ -3,7 +3,7 @@
     {
       "id": "cli_001",
       "email": "cliente@ejemplo.com",
-      "password": "$2a$10$hashedpassword123", 
+      "password": "$2a$10$hashedpassword123",
       "nombre": "Juan Pérez",
       "telefono": "+573001234567",
       "direccion": "Cartagena, Colombia",
@@ -13,18 +13,34 @@
   ],
   "trabajadores": [
     {
-      "id": "tra_001", 
+      "id": "tra_001",
       "email": "trabajador@ejemplo.com",
       "password": "$2a$10$hashedpassword456",
       "nombre": "Carlos Rodríguez",
       "telefono": "+573007654321",
       "oficio": "Albañil",
       "experiencia": 5,
-      "especialidades": ["Construcción", "Remodelación"],
+      "especialidades": [
+        "Construcción",
+        "Remodelación"
+      ],
       "calificacion": 4.8,
       "disponible": true,
-      "zona_servicio": ["Cartagena", "Turbaco"],
+      "zona_servicio": [
+        "Cartagena",
+        "Turbaco"
+      ],
       "fecha_registro": "2024-01-10T09:15:00Z"
+    },
+    {
+      "id": "tra_1760799648414_ge434ksau",
+      "nombre": "Samuel Verbel",
+      "email": "avilezverbel13@gmail.com",
+      "password": "@Sam@Ver25",
+      "telefono": "3026082534",
+      "direccion": null,
+      "fecha_registro": "2025-10-18T15:00:48.414Z",
+      "ultimo_login": null
     }
   ],
   "solicitudes": [
@@ -37,7 +53,7 @@
       "presupuesto": 500000,
       "ubicacion": "Cartagena, Bocagrande",
       "fecha_creacion": "2024-01-20T08:00:00Z",
-      "estado": "pendiente", 
+      "estado": "pendiente",
       "trabajador_asignado": null,
       "fecha_completada": null
     }
@@ -45,7 +61,7 @@
   "trabajos_activos": [
     {
       "id": "trab_001",
-      "solicitud_id": "sol_001", 
+      "solicitud_id": "sol_001",
       "trabajador_id": "tra_001",
       "cliente_id": "cli_001",
       "fecha_asignacion": "2024-01-20T10:00:00Z",
