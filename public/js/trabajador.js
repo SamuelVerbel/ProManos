@@ -22,11 +22,13 @@ class TrabajadorManager {
             formEditarPerfil.addEventListener('submit', (e) => this.guardarPerfil(e));
         }
         
-        // Hacer que el botón "Editar Perfil" funcione
-        const btnEditarPerfil = document.querySelector('button[onclick*="editarPerfil"]');
-        if (btnEditarPerfil) {
-            btnEditarPerfil.onclick = () => this.abrirModalEditarPerfil();
-        }
+        // CONECTAR EL BOTÓN "EDITAR PERFIL" - FORMA CORRECTA
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('button') && e.target.closest('button').textContent.includes('Editar Perfil')) {
+                e.preventDefault();
+                this.abrirModalEditarPerfil();
+            }
+        });
     }
 
     async cargarSolicitudes() {
