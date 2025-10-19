@@ -197,11 +197,13 @@ class TrabajadorManager {
     }
 
     async aceptarSolicitud(solicitudId) {
-        if (!confirm('¿Aceptar esta solicitud de trabajo?')) {
+        if (!confirm('¿Estás seguro de que quieres aceptar este trabajo?')) {
             return;
         }
 
         try {
+            console.log('🔄 Aceptando solicitud:', solicitudId);
+            
             const token = authManager.token;
             const response = await fetch(`/api/solicitudes/${solicitudId}/aceptar`, {
                 method: 'PUT',
@@ -214,14 +216,19 @@ class TrabajadorManager {
                 })
             });
 
-            if (response.ok) {
-                showNotification('✅ Solicitud aceptada correctamente', 'success');
+            const data = await response.json();
+            console.log('📩 Respuesta del servidor:', data);
+
+            if (response.ok && data.success) {
+                showNotification('✅ Trabajo aceptado correctamente', 'success');
+                // Recargar ambas secciones
                 await this.cargarSolicitudes();
                 await this.cargarTrabajos();
             } else {
-                showNotification('❌ Error al aceptar solicitud', 'danger');
+                showNotification('❌ ' + (data.mensaje || 'Error al aceptar el trabajo'), 'danger');
             }
         } catch (error) {
+            console.error('❌ Error en aceptarSolicitud:', error);
             showNotification('❌ Error de conexión', 'danger');
         }
     }
@@ -239,6 +246,8 @@ class TrabajadorManager {
         }
 
         try {
+            console.log('🔄 Completando trabajo:', trabajoId);
+            
             const token = authManager.token;
             const response = await fetch(`/api/trabajos/${trabajoId}/completar`, {
                 method: 'PUT',
@@ -248,13 +257,17 @@ class TrabajadorManager {
                 }
             });
 
-            if (response.ok) {
+            const data = await response.json();
+            console.log('📩 Respuesta completar trabajo:', data);
+
+            if (response.ok && data.success) {
                 showNotification('✅ Trabajo marcado como completado', 'success');
                 await this.cargarTrabajos();
             } else {
-                showNotification('❌ Error al completar trabajo', 'danger');
+                showNotification('❌ ' + (data.mensaje || 'Error al completar trabajo'), 'danger');
             }
         } catch (error) {
+            console.error('❌ Error en completarTrabajo:', error);
             showNotification('❌ Error de conexión', 'danger');
         }
     }

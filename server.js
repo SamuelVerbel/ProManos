@@ -539,15 +539,14 @@ app.put('/api/solicitudes/:id/completar', authenticateToken, async (req, res) =>
 app.get('/api/solicitudes/trabajador', authenticateToken, async (req, res) => {
     try {
         console.log('📋 Obteniendo solicitudes para trabajador:', req.user.id);
+        console.log('👤 Usuario:', req.user);
         
-        // Obtener todas las solicitudes pendientes
         const solicitudes = await database.getSolicitudesPendientes();
-        
-        console.log('✅ Solicitudes pendientes encontradas:', solicitudes.length);
+        console.log('✅ Solicitudes encontradas:', solicitudes);
         
         res.json(solicitudes);
     } catch (error) {
-        console.error('❌ Error al obtener solicitudes para trabajador:', error);
+        console.error('❌ Error:', error);
         res.status(500).json({ success: false, mensaje: 'Error al obtener solicitudes' });
     }
 });
@@ -572,6 +571,7 @@ app.get('/api/trabajos/trabajador', authenticateToken, async (req, res) => {
 app.put('/api/trabajos/:id/completar', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
+        console.log('✅ Completando trabajo:', id);
 
         const trabajo = await database.updateTrabajoEstado(id, 'completado');
         
@@ -579,13 +579,14 @@ app.put('/api/trabajos/:id/completar', authenticateToken, async (req, res) => {
             // También actualizar la solicitud relacionada
             await database.updateSolicitudEstado(trabajo.solicitud_id, 'completada');
             
+            console.log('🎉 Trabajo completado exitosamente');
             res.json({ success: true, mensaje: 'Trabajo completado', trabajo });
         } else {
             res.status(404).json({ success: false, mensaje: 'Trabajo no encontrado' });
         }
 
     } catch (error) {
-        console.error('Error al completar trabajo:', error);
+        console.error('❌ Error al completar trabajo:', error);
         res.status(500).json({ success: false, mensaje: 'Error al completar trabajo' });
     }
 });
