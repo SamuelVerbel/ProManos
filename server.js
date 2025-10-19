@@ -96,6 +96,8 @@ app.post('/api/registro/:tipo', async (req, res) => {
         const { tipo } = req.params;
         const { nombre, email, password, telefono, direccion, oficio, experiencia, especialidades, zona_servicio } = req.body;
 
+        console.log('📝 Intentando registrar usuario:', { tipo, email, nombre });
+
         // Validaciones básicas
         if (!nombre || !email || !password) {
             return res.status(400).json({ success: false, mensaje: 'Nombre, email y contraseña son requeridos' });
@@ -104,6 +106,7 @@ app.post('/api/registro/:tipo', async (req, res) => {
         // Verificar si el usuario ya existe
         const existingUser = await database.findUserByEmail(tipo, email);
         if (existingUser) {
+            console.log('❌ Usuario ya existe:', email);
             return res.status(400).json({ success: false, mensaje: 'El usuario ya existe' });
         }
 
@@ -111,7 +114,7 @@ app.post('/api/registro/:tipo', async (req, res) => {
         const userData = {
             nombre,
             email,
-            password, // Se encriptará en database.js
+            password,
             telefono: telefono || null,
             direccion: direccion || null
         };
@@ -129,8 +132,11 @@ app.post('/api/registro/:tipo', async (req, res) => {
             userData.disponible = true;
         }
 
+        console.log('📦 Datos del usuario a guardar:', userData);
+
         // Crear usuario en la base de datos
         const newUser = await database.addUser(tipo, userData);
+        console.log('✅ Usuario creado en BD:', newUser.id);
 
         // Generar token JWT
         const token = jwt.sign(
@@ -166,7 +172,7 @@ app.post('/api/registro/:tipo', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Error en registro:', error);
+        console.error('❌ Error en registro:', error);
         res.status(500).json({ success: false, mensaje: 'Error del servidor' });
     }
 });

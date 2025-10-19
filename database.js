@@ -80,6 +80,7 @@ class Database {
 
     // === MÉTODOS PARA USUARIOS ===
     async addUser(tipo, userData) {
+        console.log('💾 Guardando usuario en BD...');
         const data = this.read();
         
         // Encriptar contraseña
@@ -88,7 +89,7 @@ class Database {
         const newUser = {
             id: this.generateId(tipo === 'cliente' ? 'cli' : 'tra'),
             ...userData,
-            password: hashedPassword, // Guardar contraseña encriptada
+            password: hashedPassword,
             fecha_registro: new Date().toISOString(),
             ultimo_login: null
         };
@@ -99,7 +100,14 @@ class Database {
         }
         
         data[tipo === 'cliente' ? 'clientes' : 'trabajadores'].push(newUser);
-        this.save(data);
+        
+        console.log('📊 Estado de BD antes de guardar:');
+        console.log('- Clientes:', data.clientes.length);
+        console.log('- Trabajadores:', data.trabajadores.length);
+        
+        const saved = this.save(data);
+        console.log('✅ Usuario guardado correctamente:', saved);
+        
         return newUser;
     }
 
