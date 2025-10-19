@@ -97,6 +97,70 @@
             </div>
         </div>
     </main>
+    
+        <!-- Modal Editar Perfil -->
+    <div id="modalEditarPerfil" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div class="card" style="max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 1rem;">
+                <h3><i class="fas fa-user-edit"></i> Editar Perfil</h3>
+                <button onclick="trabajadorManager.cerrarModalEditarPerfil()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+
+            <form id="formEditarPerfil">
+                <div class="form-group">
+                    <label class="form-label">Nombre Completo</label>
+                    <input type="text" id="editNombre" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Teléfono</label>
+                    <input type="tel" id="editTelefono" class="form-control" pattern="[0-9]{10}" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Especialidad (Oficio)</label>
+                    <select id="editOficio" class="form-control" required>
+                        <option value="">Selecciona tu especialidad</option>
+                        <option value="albañil">Albañilería</option>
+                        <option value="plomero">Plomería</option>
+                        <option value="electricista">Electricidad</option>
+                        <option value="pintor">Pintura</option>
+                        <option value="carpintero">Carpintería</option>
+                        <option value="jardinero">Jardinería</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Años de Experiencia</label>
+                    <input type="number" id="editExperiencia" class="form-control" min="0" max="50" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Especialidades</label>
+                    <input type="text" id="editEspecialidades" class="form-control" placeholder="Ej: Construcción, Remodelación, Reparaciones...">
+                    <small class="text-muted">Separa con comas tus especialidades</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Zonas de Servicio</label>
+                    <input type="text" id="editZonas" class="form-control" placeholder="Ej: Cartagena, Turbaco, Bocagrande..." value="Cartagena" required>
+                    <small class="text-muted">Separa con comas las zonas donde trabajas</small>
+                </div>
+
+                <div class="form-group form-check">
+                    <input type="checkbox" id="editDisponible" class="form-check-input" checked>
+                    <label class="form-check-label">Disponible para trabajar</label>
+                </div>
+
+                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                    <button type="button" class="btn btn-outline" onclick="trabajadorManager.cerrarModalEditarPerfil()" style="flex: 1;">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                        <i class="fas fa-save"></i> Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <script src="/js/auth.js"></script>
     <script src="/js/trabajador.js"></script>

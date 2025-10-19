@@ -17,7 +17,16 @@ class TrabajadorManager {
     }
 
     setupEventListeners() {
-        // Aquí irán los event listeners para botones
+        const formEditarPerfil = document.getElementById('formEditarPerfil');
+        if (formEditarPerfil) {
+            formEditarPerfil.addEventListener('submit', (e) => this.guardarPerfil(e));
+        }
+        
+        // Hacer que el botón "Editar Perfil" funcione
+        const btnEditarPerfil = document.querySelector('button[onclick*="editarPerfil"]');
+        if (btnEditarPerfil) {
+            btnEditarPerfil.onclick = () => this.abrirModalEditarPerfil();
+        }
     }
 
     async cargarSolicitudes() {
@@ -246,6 +255,74 @@ class TrabajadorManager {
                 showNotification('❌ Error al completar trabajo', 'danger');
             }
         } catch (error) {
+            showNotification('❌ Error de conexión', 'danger');
+        }
+    }
+
+        // Métodos para editar perfil
+    abrirModalEditarPerfil() {
+        this.cargarDatosEnFormulario();
+        document.getElementById('modalEditarPerfil').style.display = 'flex';
+    }
+
+    cerrarModalEditarPerfil() {
+        document.getElementById('modalEditarPerfil').style.display = 'none';
+    }
+
+    cargarDatosEnFormulario() {
+        const perfil = authManager.user;
+        
+        if (perfil) {
+            document.getElementById('editNombre').value = perfil.nombre || '';
+            document.getElementById('editTelefono').value = perfil.telefono || '';
+            document.getElementById('editOficio').value = perfil.oficio || '';
+            document.getElementById('editExperiencia').value = perfil.experiencia || 0;
+            document.getElementById('editEspecialidades').value = perfil.especialidades ? perfil.especialidades.join(', ') : '';
+            document.getElementById('editZonas').value = perfil.zona_servicio ? perfil.zona_servicio.join(', ') : 'Cartagena';
+            document.getElementById('editDisponible').checked = perfil.disponible !== false;
+        }
+    }
+
+    async guardarPerfil(e) {
+        e.preventDefault();
+        
+        const datosActualizados = {
+            nombre: document.getElementById('editNombre').value,
+            telefono: document.getElementById('editTelefono').value,
+            oficio: document.getElementById('editOficio').value,
+            experiencia: parseInt(document.getElementById('editExperiencia').value),
+            especialidades: document.getElementById('editEspecialidades').value.split(',').map(item => item.trim()).filter(item => item),
+            zona_servicio: document.getElementById('editZonas').value.split(',').map(item => item.trim()).filter(item => item),
+            disponible: document.getElementById('editDisponible').checked
+        };
+
+        try {
+            const token = authManager.token;
+            const response = await fetch('/api/perfil', {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(datosActualizados)
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                showNotification('✅ Perfil actualizado correctamente', 'success');
+                
+                // Actualizar datos en el localStorage y en la UI
+                authManager.user = { ...authManager.user, ...datosActualizados };
+                localStorage.setItem('userData', JSON.stringify(authManager.user));
+                
+                this.cerrarModalEditarPerfil();
+                await this.cargarPerfil();
+            } else {
+                showNotification('❌ ' + (data.mensaje || 'Error al actualizar perfil'), 'danger');
+            }
+        } catch (error) {
+            console.error('Error al guardar perfil:', error);
             showNotification('❌ Error de conexión', 'danger');
         }
     }
