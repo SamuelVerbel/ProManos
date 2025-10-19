@@ -87,7 +87,7 @@ class Database {
         const hashedPassword = await bcrypt.hash(userData.password, 10);
         
         const newUser = {
-            id: this.generateId(tipo === 'cliente' ? 'cli' : 'tra'),
+            id: this.generateId(tipo === 'clientes' ? 'cli' : 'tra'),
             ...userData,
             password: hashedPassword,
             fecha_registro: new Date().toISOString(),
@@ -95,11 +95,11 @@ class Database {
         };
         
         // Asegurar que la dirección se guarde para clientes
-        if (tipo === 'cliente') {
+        if (tipo === 'clientes') {
             newUser.direccion = userData.direccion || '';
         }
         
-        data[tipo === 'cliente' ? 'clientes' : 'trabajadores'].push(newUser);
+        data[tipo === 'clientes' ? 'clientes' : 'trabajadores'].push(newUser);
         
         console.log('📊 Estado de BD antes de guardar:');
         console.log('- Clientes:', data.clientes.length);
@@ -113,19 +113,19 @@ class Database {
 
     async findUserByEmail(tipo, email) {
         const data = this.read();
-        const users = data[tipo === 'cliente' ? 'clientes' : 'trabajadores'];
+        const users = data[tipo === 'clientes' ? 'clientes' : 'trabajadores'];
         return users.find(user => user.email === email);
     }
 
     async findUserById(tipo, userId) {
         const data = this.read();
-        const users = data[tipo === 'cliente' ? 'clientes' : 'trabajadores'];
+        const users = data[tipo === 'clientes' ? 'clientes' : 'trabajadores'];
         return users.find(user => user.id === userId);
     }
 
     async updateLastLogin(userType, userId) {
         const data = this.read();
-        const users = data[userType === 'cliente' ? 'clientes' : 'trabajadores'];
+        const users = data[userType === 'clientes' ? 'clientes' : 'trabajadores'];
         const userIndex = users.findIndex(user => user.id === userId);
         
         if (userIndex !== -1) {
@@ -138,7 +138,7 @@ class Database {
 
     async updatePassword(userType, userId, newPassword) {
         const data = this.read();
-        const users = data[userType === 'cliente' ? 'clientes' : 'trabajadores'];
+        const users = data[userType === 'clientes' ? 'clientes' : 'trabajadores'];
         const userIndex = users.findIndex(user => user.id === userId);
         
         if (userIndex !== -1) {
@@ -151,7 +151,7 @@ class Database {
 
     async updateUserProfile(userType, userId, updateData) {
         const data = this.read();
-        const users = data[userType === 'cliente' ? 'clientes' : 'trabajadores'];
+        const users = data[userType === 'clientes' ? 'clientes' : 'trabajadores'];
         const userIndex = users.findIndex(user => user.id === userId);
         
         if (userIndex !== -1) {
