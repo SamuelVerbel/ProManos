@@ -534,3 +534,58 @@ app.put('/api/solicitudes/:id/completar', authenticateToken, async (req, res) =>
         res.status(500).json({ success: false, mensaje: 'Error al completar solicitud' });
     }
 });
+
+// ENDPOINT PARA OBTENER SOLICITUDES PENDIENTES (TRABAJADORES)
+app.get('/api/solicitudes/trabajador', authenticateToken, async (req, res) => {
+    try {
+        console.log('📋 Obteniendo solicitudes para trabajador:', req.user.id);
+        
+        // Obtener todas las solicitudes pendientes
+        const solicitudes = await database.getSolicitudesPendientes();
+        
+        console.log('✅ Solicitudes pendientes encontradas:', solicitudes.length);
+        
+        res.json(solicitudes);
+    } catch (error) {
+        console.error('❌ Error al obtener solicitudes para trabajador:', error);
+        res.status(500).json({ success: false, mensaje: 'Error al obtener solicitudes' });
+    }
+});
+
+// ENDPOINT PARA OBTENER TRABAJOS ASIGNADOS (TRABAJADOR)
+app.get('/api/trabajos/trabajador', authenticateToken, async (req, res) => {
+    try {
+        console.log('👷 Obteniendo trabajos asignados para:', req.user.id);
+        
+        const trabajos = await database.getTrabajosActivosByTrabajador(req.user.id);
+        
+        console.log('✅ Trabajos activos encontrados:', trabajos.length);
+        
+        res.json(trabajos);
+    } catch (error) {
+        console.error('❌ Error al obtener trabajos:', error);
+        res.status(500).json({ success: false, mensaje: 'Error al obtener trabajos' });
+    }
+});
+
+// COMPLETAR TRABAJO
+app.put('/api/trabajos/:id/completar', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const trabajo = await database.updateTrabajoEstado(id, 'completado');
+        
+        if (trabajo) {
+            // También actualizar la solicitud relacionada
+            await database.updateSolicitudEstado(trabajo.solicitud_id, 'completada');
+            
+            res.json({ success: true, mensaje: 'Trabajo completado', trabajo });
+        } else {
+            res.status(404).json({ success: false, mensaje: 'Trabajo no encontrado' });
+        }
+
+    } catch (error) {
+        console.error('Error al completar trabajo:', error);
+        res.status(500).json({ success: false, mensaje: 'Error al completar trabajo' });
+    }
+});

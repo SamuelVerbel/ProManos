@@ -1,30 +1,68 @@
 class TrabajadorManager {
     constructor() {
         this.solicitudes = [];
+        this.trabajos = [];
         this.init();
     }
 
     async init() {
-        // Verificar autenticación
         if (!authManager.checkAuth('trabajadores')) {
             return;
         }
 
         await this.cargarSolicitudes();
+        await this.cargarTrabajos();
+        await this.cargarPerfil();
         this.setupEventListeners();
-        this.mostrarInfoUsuario();
-        this.actualizarEstadisticas();
-        this.cargarPerfil();
     }
 
     setupEventListeners() {
-        // Event listeners para acciones del trabajador
+        // Aquí irán los event listeners para botones
     }
 
-    mostrarInfoUsuario() {
-        const welcomeMessage = document.getElementById('welcomeMessage');
-        if (welcomeMessage && authManager.user) {
-            welcomeMessage.textContent = `Bienvenido, ${authManager.user.nombre || 'Trabajador'}`;
+    async cargarSolicitudes() {
+        try {
+            const token = authManager.token;
+            const response = await fetch('/api/solicitudes/trabajador', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                this.solicitudes = await response.json();
+                this.mostrarSolicitudes();
+            } else {
+                this.solicitudes = [];
+                this.mostrarSolicitudes();
+            }
+        } catch (error) {
+            console.error('Error cargando solicitudes:', error);
+            this.solicitudes = [];
+            this.mostrarSolicitudes();
+        }
+    }
+
+    async cargarTrabajos() {
+        try {
+            const token = authManager.token;
+            const response = await fetch('/api/trabajos/trabajador', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                this.trabajos = await response.json();
+                this.mostrarTrabajos();
+            } else {
+                this.trabajos = [];
+                this.mostrarTrabajos();
+            }
+        } catch (error) {
+            console.error('Error cargando trabajos:', error);
+            this.trabajos = [];
+            this.mostrarTrabajos();
         }
     }
 
@@ -48,81 +86,93 @@ class TrabajadorManager {
         }
     }
 
-    mostrarPerfil(perfil) {
-        document.getElementById('perfilEspecialidad').textContent = perfil.oficio || perfil.especialidad || 'No especificada';
-        document.getElementById('perfilExperiencia').textContent = perfil.experiencia || 0;
-        document.getElementById('perfilCalificacion').textContent = perfil.calificacion || '0';
-    }
-
-    async cargarSolicitudes() {
-        try {
-            const token = authManager.token;
-            const response = await fetch('/api/solicitudes?tipo=trabajador', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (response.ok) {
-                this.solicitudes = await response.json();
-            } else {
-                this.solicitudes = [];
-            }
-            
-            this.mostrarSolicitudes();
-            this.actualizarEstadisticas();
-        } catch (error) {
-            console.error('Error cargando solicitudes:', error);
-            this.solicitudes = [];
-            this.mostrarSolicitudes();
-        }
-    }
-
     mostrarSolicitudes() {
         const container = document.getElementById('solicitudesContainer');
         if (!container) return;
 
         if (this.solicitudes.length === 0) {
             container.innerHTML = `
-                <div class="text-center">
+                <div class="text-center" style="padding: 2rem;">
                     <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                    <h3>No hay solicitudes disponibles</h3>
-                    <p class="text-muted">Las nuevas solicitudes aparecerán aquí</p>
+                    <h4>No hay solicitudes disponibles</h4>
+                    <p class="text-muted">No hay solicitudes pendientes en este momento</p>
                 </div>
             `;
             return;
         }
 
-        container.innerHTML = this.solicitudes
-            .map(solicitud => `
-                <div class="solicitud-item ${solicitud.estado}">
-                    <div class="solicitud-header">
-                        <span class="solicitud-tipo badge bg-primary">${this.getTipoDisplay(solicitud.oficio)}</span>
-                        <span class="solicitud-estado estado-${solicitud.estado}">
-                            ${this.getEstadoDisplay(solicitud.estado)}
-                        </span>
-                    </div>
-                    
-                    <div class="solicitud-body">
-                        <p><strong>Descripción:</strong> ${solicitud.descripcion}</p>
-                        <p><strong>Ubicación:</strong> ${solicitud.ubicacion}</p>
-                        <p><strong>Presupuesto:</strong> $${solicitud.presupuesto || '0'}</p>
-                        <p><strong>Fecha:</strong> ${new Date(solicitud.fecha_creacion).toLocaleDateString('es-ES')}</p>
-                    </div>
-                    
-                    <div class="solicitud-actions">
-                        ${solicitud.estado === 'pendiente' ? 
-                            `<button class="btn btn-primary btn-sm" onclick="trabajadorManager.aceptarSolicitud('${solicitud.id}')">
-                                <i class="fas fa-check"></i> Aceptar Trabajo
-                            </button>` : ''}
-                        
-                        ${solicitud.estado === 'asignado' && solicitud.trabajador_asignado === authManager.user?.id ? 
-                            `<button class="btn btn-success btn-sm" onclick="trabajadorManager.completarSolicitud('${solicitud.id}')">
-                                <i class="fas fa-flag-checkered"></i> Marcar como Completado
-                            </button>` : ''}
+        container.innerHTML = this.solicitudes.map(solicitud => `
+            <div class="solicitud-item" style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; background: white;">
+                <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 0.5rem;">
+                    <div>
+                        <strong class="badge" style="background: #e74c3c; color: white; padding: 0.25rem 0.5rem; border-radius: 4px;">
+                            ${this.getTipoDisplay(solicitud.oficio)}
+                        </strong>
+                        <small class="text-muted" style="margin-left: 0.5rem;">
+                            ${new Date(solicitud.fecha_creacion).toLocaleDateString('es-ES')}
+                        </small>
                     </div>
                 </div>
-            `).join('');
+                
+                <div style="margin-bottom: 0.5rem;">
+                    <p style="margin: 0; font-size: 0.9rem;"><strong>Descripción:</strong> ${solicitud.descripcion}</p>
+                </div>
+                
+                <div style="margin-bottom: 0.5rem;">
+                    <p style="margin: 0; font-size: 0.9rem;"><strong>Ubicación:</strong> ${solicitud.ubicacion}</p>
+                </div>
+
+                <div style="margin-bottom: 0.5rem;">
+                    <p style="margin: 0; font-size: 0.9rem;"><strong>Presupuesto:</strong> $${solicitud.presupuesto || '0'}</p>
+                </div>
+
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn btn-sm btn-success" onclick="trabajadorManager.aceptarSolicitud('${solicitud.id}')" 
+                            style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
+                        <i class="fas fa-check"></i> Aceptar Trabajo
+                    </button>
+                    
+                    <button class="btn btn-sm btn-outline-primary" onclick="trabajadorManager.verDetallesSolicitud('${solicitud.id}')" 
+                            style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
+                        <i class="fas fa-eye"></i> Ver Detalles
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    mostrarTrabajos() {
+        const container = document.getElementById('trabajosContainer');
+        if (!container) return;
+
+        if (this.trabajos.length === 0) {
+            container.innerHTML = `
+                <div class="text-center">
+                    <i class="fas fa-clipboard-list fa-2x text-muted mb-2"></i>
+                    <p class="text-muted">No tienes trabajos programados</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = this.trabajos.map(trabajo => `
+            <div class="trabajo-item" style="border-left: 4px solid #27ae60; padding: 0.5rem; margin-bottom: 0.5rem; background: #f8f9fa;">
+                <p style="margin: 0; font-weight: 500;">${trabajo.descripcion}</p>
+                <small class="text-muted">Asignado: ${new Date(trabajo.fecha_asignacion).toLocaleDateString('es-ES')}</small>
+                <div style="margin-top: 0.5rem;">
+                    <button class="btn btn-sm btn-primary" onclick="trabajadorManager.completarTrabajo('${trabajo.id}')">
+                        <i class="fas fa-check-circle"></i> Marcar como Completado
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    mostrarPerfil(perfil) {
+        // Actualizar información del perfil en la UI
+        document.getElementById('especialidad').textContent = perfil.oficio || 'No especificada';
+        document.getElementById('experiencia').textContent = perfil.experiencia ? `${perfil.experiencia} años` : '- años';
+        document.getElementById('calificacion').textContent = perfil.calificacion ? `${perfil.calificacion}/5` : '-/5';
     }
 
     getTipoDisplay(tipo) {
@@ -131,20 +181,10 @@ class TrabajadorManager {
             'plomero': 'Plomería',
             'electricista': 'Electricidad',
             'pintor': 'Pintura',
-            'carpintero': 'Carpintería'
+            'carpintero': 'Carpintería',
+            'jardinero': 'Jardinería'
         };
         return tipos[tipo] || tipo;
-    }
-
-    getEstadoDisplay(estado) {
-        const estados = {
-            'pendiente': '🟡 Pendiente',
-            'asignado': '🔵 Asignado',
-            'en_proceso': '🟠 En Proceso',
-            'completada': '✅ Completada',
-            'cancelada': '❌ Cancelada'
-        };
-        return estados[estado] || estado;
     }
 
     async aceptarSolicitud(solicitudId) {
@@ -161,31 +201,37 @@ class TrabajadorManager {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    trabajador_id: authManager.user?.id
+                    trabajador_id: authManager.user.id
                 })
             });
 
             if (response.ok) {
-                showNotification('✅ Solicitud aceptada', 'success');
+                showNotification('✅ Solicitud aceptada correctamente', 'success');
                 await this.cargarSolicitudes();
-                await this.actualizarEstadisticas();
+                await this.cargarTrabajos();
             } else {
-                const error = await response.json();
-                showNotification('❌ ' + (error.mensaje || 'Error al aceptar solicitud'), 'danger');
+                showNotification('❌ Error al aceptar solicitud', 'danger');
             }
         } catch (error) {
             showNotification('❌ Error de conexión', 'danger');
         }
     }
 
-    async completarSolicitud(solicitudId) {
+    verDetallesSolicitud(id) {
+        const solicitud = this.solicitudes.find(s => s.id === id);
+        if (solicitud) {
+            alert(`Detalles de la solicitud:\n\nTipo: ${this.getTipoDisplay(solicitud.oficio)}\nDescripción: ${solicitud.descripcion}\nUbicación: ${solicitud.ubicacion}\nPresupuesto: $${solicitud.presupuesto || '0'}`);
+        }
+    }
+
+    async completarTrabajo(trabajoId) {
         if (!confirm('¿Marcar este trabajo como completado?')) {
             return;
         }
 
         try {
             const token = authManager.token;
-            const response = await fetch(`/api/solicitudes/${solicitudId}/completar`, {
+            const response = await fetch(`/api/trabajos/${trabajoId}/completar`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -194,27 +240,14 @@ class TrabajadorManager {
             });
 
             if (response.ok) {
-                showNotification('🎉 Trabajo marcado como completado', 'success');
-                await this.cargarSolicitudes();
-                await this.actualizarEstadisticas();
+                showNotification('✅ Trabajo marcado como completado', 'success');
+                await this.cargarTrabajos();
             } else {
-                showNotification('❌ Error al completar solicitud', 'danger');
+                showNotification('❌ Error al completar trabajo', 'danger');
             }
         } catch (error) {
             showNotification('❌ Error de conexión', 'danger');
         }
-    }
-
-    actualizarEstadisticas() {
-        const total = this.solicitudes.length;
-        const pendientes = this.solicitudes.filter(s => s.estado === 'pendiente').length;
-        const aceptadas = this.solicitudes.filter(s => s.estado === 'asignado' && s.trabajador_asignado === authManager.user?.id).length;
-        const completadas = this.solicitudes.filter(s => s.estado === 'completada' && s.trabajador_asignado === authManager.user?.id).length;
-
-        document.getElementById('stat-total')?.textContent = total;
-        document.getElementById('stat-pendientes')?.textContent = pendientes;
-        document.getElementById('stat-aceptadas')?.textContent = aceptadas;
-        document.getElementById('stat-completadas')?.textContent = completadas;
     }
 }
 

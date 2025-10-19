@@ -332,6 +332,14 @@ class Database {
         };
     }
 
+    // En la clase Database, agregar:
+    async getTrabajosActivosByTrabajador(trabajadorId) {
+        const data = this.read();
+        return data.trabajos_activos.filter(trab => 
+            trab.trabajador_id === trabajadorId && trab.estado === 'en_progreso'
+        );
+    }
+
     // Método para debugging - ver estadísticas
     getStats() {
         try {
