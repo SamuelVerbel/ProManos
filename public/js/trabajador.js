@@ -133,16 +133,17 @@ class TrabajadorManager {
                     <p style="margin: 0; font-size: 0.9rem;"><strong>Ubicación:</strong> ${solicitud.ubicacion}</p>
                 </div>
 
-                <div style="margin-bottom: 0.5rem;">
-                    <p style="margin: 0; font-size: 0.9rem;"><strong>Presupuesto:</strong> $${solicitud.presupuesto || '0'}</p>
-                </div>
-
                 <div style="display: flex; gap: 0.5rem;">
                     <button class="btn btn-sm btn-success" onclick="trabajadorManager.aceptarSolicitud('${solicitud.id}')" 
                             style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
                         <i class="fas fa-check"></i> Aceptar Trabajo
                     </button>
                     
+                    <button class="btn btn-sm btn-danger" onclick="trabajadorManager.rechazarSolicitud('${solicitud.id}')" 
+                            style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
+                        <i class="fas fa-times"></i> Rechazar Trabajo
+                    </button>
+
                     <button class="btn btn-sm btn-outline-primary" onclick="trabajadorManager.verDetallesSolicitud('${solicitud.id}')" 
                             style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
                         <i class="fas fa-eye"></i> Ver Detalles

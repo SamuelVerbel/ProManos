@@ -590,3 +590,17 @@ app.put('/api/trabajos/:id/completar', authenticateToken, async (req, res) => {
         res.status(500).json({ success: false, mensaje: 'Error al completar trabajo' });
     }
 });
+
+app.get('/debug-db', (req, res) => {
+    const database = require('./database');
+    const data = database.read();
+    const stats = database.getStats();
+    
+    res.json({
+        filePath: database.filePath,
+        stats: stats,
+        clientes: data.clientes,
+        trabajadores: data.trabajadores,
+        solicitudes: data.solicitudes
+    });
+});
