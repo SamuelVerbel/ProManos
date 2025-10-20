@@ -63,6 +63,10 @@ app.get('/clientes/index.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'clientes', 'index.html'));
 });
 
+app.get('/recuperar-contrasena.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'clientes', 'recuperar-contrasena.html'));
+});
+
 // Servir archivos estáticos
 app.use('/clientes', express.static(path.join(__dirname, 'views', 'clientes')));
 app.use('/trabajadores', express.static(path.join(__dirname, 'views', 'trabajador')));
@@ -666,4 +670,218 @@ app.get('*', (req, res) => {
         });
     }
     res.status(404).send('Not Found');
+});
+
+// ======== RUTAS DE RECUPERACIÓN DE CONTRASEÑA ========
+
+// Enviar código de recuperación
+app.post('/api/send-recovery-code', async (req, res) => {
+    try {
+        const { email } = req.body;
+        console.log('📧 Solicitando código de recuperación para:', email);
+
+        // Conectar a la base de datos
+        const db = await connectDB();
+        const usuariosCollection = db.collection('usuarios');
+
+        // Verificar si el usuario existe
+        const user = await usuariosCollection.findOne({ email });
+        if (!user) {
+            return res.json({ 
+                success: false, 
+                mensaje: 'No existe una cuenta con este email' 
+            });
+        }
+
+        // Generar código de 6 dígitos
+        const recoveryCode = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        // Guardar código en la base de datos (con expiración de 15 minutos)
+        await usuariosCollection.updateOne(
+            { _id: user._id },
+            { 
+                $set: { 
+                    recoveryCode: recoveryCode,
+                    recoveryCodeExpires: new Date(Date.now() + 15 * 60 * 1000)
+                } 
+            }
+        );
+
+        // En desarrollo: mostrar código en consola
+        console.log(`✅ Código de recuperación para ${email}: ${recoveryCode}`);
+        console.log(`⏰ El código expira en 15 minutos`);
+
+        // En producción aquí integrarías con tu servicio de email
+        // await sendRecoveryEmail(email, recoveryCode);
+
+        res.json({ 
+            success: true, 
+            mensaje: 'Código de recuperación enviado a tu email',
+            // Solo para desarrollo/testing - remover en producción
+            debug_code: recoveryCode
+        });
+
+    } catch (error) {
+        console.error('❌ Error al enviar código:', error);
+        res.json({ 
+            success: false, 
+            mensaje: 'Error al enviar el código de recuperación' 
+        });
+    }
+});
+
+// Verificar código de recuperación
+app.post('/api/verify-recovery-code', async (req, res) => {
+    try {
+        const { email, code } = req.body;
+        console.log('🔍 Verificando código:', code, 'para:', email);
+
+        // Conectar a la base de datos
+        const db = await connectDB();
+        const usuariosCollection = db.collection('usuarios');
+
+        // Buscar usuario con código válido y no expirado
+        const user = await usuariosCollection.findOne({ 
+            email: email,
+            recoveryCode: code,
+            recoveryCodeExpires: { $gt: new Date() }
+        });
+
+        if (!user) {
+            return res.json({ 
+                success: false, 
+                mensaje: 'Código inválido o expirado' 
+            });
+        }
+
+        console.log('✅ Código verificado correctamente para:', email);
+
+        res.json({ 
+            success: true, 
+            mensaje: 'Código verificado correctamente' 
+        });
+
+    } catch (error) {
+        console.error('❌ Error al verificar código:', error);  
+        res.json({ 
+            success: false, 
+            mensaje: 'Error al verificar el código' 
+        });
+    }
+});
+
+// Restablecer contraseña
+app.post('/api/reset-password', async (req, res) => {
+    try {
+        const { email, code, newPassword } = req.body;
+        console.log('🔄 Restableciendo contraseña para:', email);
+
+        // Validar longitud de contraseña
+        if (newPassword.length < 6) {
+            return res.json({ 
+                success: false, 
+                mensaje: 'La contraseña debe tener al menos 6 caracteres' 
+            });
+        }
+
+        // Conectar a la base de datos
+        const db = await connectDB();
+        const usuariosCollection = db.collection('usuarios');
+
+        // Buscar usuario con código válido
+        const user = await usuariosCollection.findOne({ 
+            email: email,
+            recoveryCode: code,
+            recoveryCodeExpires: { $gt: new Date() }
+        });
+
+        if (!user) {
+            return res.json({ 
+                success: false, 
+                mensaje: 'Código inválido o expirado' 
+            });
+        }
+
+        // Hashear nueva contraseña
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Actualizar contraseña y limpiar código de recuperación
+        await usuariosCollection.updateOne(
+            { _id: user._id },
+            { 
+                $set: { 
+                    password: hashedPassword 
+                },
+                $unset: {
+                    recoveryCode: "",
+                    recoveryCodeExpires: ""
+                }
+            }
+        );
+
+        console.log('✅ Contraseña actualizada para:', email);
+
+        res.json({ 
+            success: true, 
+            mensaje: 'Contraseña cambiada exitosamente' 
+        });
+
+    } catch (error) {
+        console.error('❌ Error al restablecer contraseña:', error);
+        res.json({ 
+            success: false, 
+            mensaje: 'Error al cambiar la contraseña' 
+        });
+    }
+});
+
+// Reenviar código de recuperación
+app.post('/api/resend-recovery-code', async (req, res) => {
+    try {
+        const { email } = req.body;
+        console.log('🔄 Reenviando código para:', email);
+
+        // Conectar a la base de datos
+        const db = await connectDB();
+        const usuariosCollection = db.collection('usuarios');
+
+        // Verificar si el usuario existe
+        const user = await usuariosCollection.findOne({ email });
+        if (!user) {
+            return res.json({ 
+                success: false, 
+                mensaje: 'No existe una cuenta con este email' 
+            });
+        }
+
+        // Generar nuevo código de 6 dígitos
+        const recoveryCode = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        // Actualizar código en la base de datos
+        await usuariosCollection.updateOne(
+            { _id: user._id },
+            { 
+                $set: { 
+                    recoveryCode: recoveryCode,
+                    recoveryCodeExpires: new Date(Date.now() + 15 * 60 * 1000)
+                } 
+            }
+        );
+
+        console.log(`✅ Nuevo código de recuperación para ${email}: ${recoveryCode}`);
+
+        res.json({ 
+            success: true, 
+            mensaje: 'Código reenviado exitosamente',
+            // Solo para desarrollo/testing - remover en producción
+            debug_code: recoveryCode
+        });
+
+    } catch (error) {
+        console.error('❌ Error al reenviar código:', error);
+        res.json({ 
+            success: false, 
+            mensaje: 'Error al reenviar el código' 
+        });
+    }
 });

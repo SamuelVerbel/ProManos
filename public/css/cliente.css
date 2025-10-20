@@ -419,3 +419,194 @@
         transform: translateY(0);
     }
 }
+
+/* Estilos para recuperación de contraseña - Matching login style */
+.recovery-steps {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+.recovery-steps::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 10%;
+    right: 10%;
+    height: 2px;
+    background: #e0e0e0;
+    z-index: 1;
+}
+
+.step {
+    text-align: center;
+    position: relative;
+    z-index: 2;
+    flex: 1;
+}
+
+.step-number {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: #e0e0e0;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 0.5rem;
+    font-weight: bold;
+    border: 3px solid white;
+    font-size: 0.9rem;
+}
+
+.step.active .step-number {
+    background: #4a6cf7;
+    color: white;
+}
+
+.step.completed .step-number {
+    background: #28a745;
+    color: white;
+}
+
+.step-text {
+    font-size: 0.75rem;
+    color: #666;
+}
+
+.step.active .step-text {
+    color: #4a6cf7;
+    font-weight: 600;
+}
+
+.recovery-form {
+    display: none;
+}
+
+.recovery-form.active {
+    display: block;
+}
+
+.code-inputs {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin: 1.5rem 0;
+}
+
+.code-input {
+    width: 45px;
+    height: 55px;
+    text-align: center;
+    font-size: 1.3rem;
+    font-weight: bold;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.code-input:focus {
+    border-color: #4a6cf7;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(74, 108, 247, 0.2);
+}
+
+.code-input.filled {
+    border-color: #28a745;
+    background: #f8fff9;
+}
+
+.timer {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 0.5rem;
+}
+
+.password-input {
+    position: relative;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #666;
+    background: none;
+    border: none;
+    font-size: 0.9rem;
+}
+
+.password-toggle:hover {
+    color: #4a6cf7;
+}
+
+.validation-message {
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+    min-height: 1rem;
+    font-weight: 500;
+}
+
+.validation-message.error {
+    color: #dc3545;
+}
+
+.validation-message.success {
+    color: #28a745;
+}
+
+.success-icon {
+    font-size: 3.5rem;
+    color: #28a745;
+    margin-bottom: 1rem;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    max-width: 400px;
+    width: 100%;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .code-inputs {
+        gap: 6px;
+    }
+    
+    .code-input {
+        width: 40px;
+        height: 50px;
+        font-size: 1.1rem;
+    }
+    
+    .recovery-steps::before {
+        left: 5%;
+        right: 5%;
+    }
+}
