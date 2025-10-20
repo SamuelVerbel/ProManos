@@ -49,10 +49,10 @@ class ClienteManager {
             titulo: `Solicitud de ${this.getTipoDisplay(tipo)}`,
             descripcion: descripcion,
             oficio: tipo,
-            presupuesto: 0,
             ubicacion: direccion,
             telefono: telefono,
             correo: correo
+            // 🗑️ QUITADO: presupuesto: 0,
         };
 
         console.log('📤 Enviando solicitud:', solicitudData); // Debug
@@ -147,6 +147,27 @@ class ClienteManager {
         document.getElementById('stat-completadas').textContent = estadisticas.solicitudes_completadas || 0;
     }
 
+    // ✅ FUNCIÓN NUEVA PARA FORMATEAR FECHAS CORRECTAMENTE
+    formatearFecha(fechaISO) {
+        if (!fechaISO) return 'Fecha no disponible';
+        try {
+            const fecha = new Date(fechaISO);
+            // Ajustar por zona horaria de Colombia
+            const fechaAjustada = new Date(fecha.getTime());
+            return fechaAjustada.toLocaleDateString('es-CO', {
+                year: 'numeric',
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZone: 'America/Bogota'
+            });
+        } catch (error) {
+            console.error('Error formateando fecha:', fechaISO, error);
+            return 'Fecha inválida';
+        }
+    }
+
     mostrarSolicitudes() {
         const container = document.getElementById('solicitudesContainer');
         if (!container) return;
@@ -167,7 +188,7 @@ class ClienteManager {
                 <div class="solicitud-header">
                     <div class="solicitud-info">
                         <span class="solicitud-tipo badge bg-primary">${this.getTipoDisplay(solicitud.oficio)}</span>
-                        <span class="solicitud-fecha">${new Date(solicitud.fecha_creacion).toLocaleDateString('es-ES')}</span>
+                        <span class="solicitud-fecha">${this.formatearFecha(solicitud.fechaCreacion)}</span>
                     </div>
                     <span class="solicitud-estado estado-${solicitud.estado}">
                         ${this.getEstadoDisplay(solicitud.estado)}
@@ -177,7 +198,9 @@ class ClienteManager {
                 <div class="solicitud-body">
                     <p><strong>Descripción:</strong> ${solicitud.descripcion}</p>
                     <p><strong>Ubicación:</strong> ${solicitud.ubicacion}</p>
-                    <p><strong>Presupuesto:</strong> $${solicitud.presupuesto || '0'}</p>
+                    <p><strong>Teléfono:</strong> ${solicitud.telefono || 'No proporcionado'}</p>
+                    <p><strong>Correo:</strong> ${solicitud.correo || 'No proporcionado'}</p>
+                    <!-- 🗑️ QUITADO: Presupuesto -->
                 </div>
 
                 ${solicitud.trabajador_asignado ? `
@@ -188,12 +211,12 @@ class ClienteManager {
 
                 <div class="solicitud-actions">
                     ${solicitud.estado === 'pendiente' ? `
-                        <button class="btn btn-sm btn-outline-danger" onclick="clienteManager.cancelarSolicitud('${solicitud.id}')">
+                        <button class="btn btn-sm btn-outline-danger" onclick="clienteManager.cancelarSolicitud('${solicitud._id}')">
                             <i class="fas fa-times"></i> Cancelar
                         </button>
                     ` : ''}
                     
-                    <button class="btn btn-sm btn-outline-primary" onclick="clienteManager.verDetalles('${solicitud.id}')">
+                    <button class="btn btn-sm btn-outline-primary" onclick="clienteManager.verDetalles('${solicitud._id}')">
                         <i class="fas fa-eye"></i> Ver Detalles
                     </button>
                 </div>
@@ -204,10 +227,13 @@ class ClienteManager {
     getTipoDisplay(tipo) {
         const tipos = {
             'albañil': 'Albañilería',
-            'plomero': 'Plomería',
+            'plomero': 'Plomería', 
             'electricista': 'Electricidad',
             'pintor': 'Pintura',
-            'carpintero': 'Carpintería'
+            'carpintero': 'Carpintería',
+            'herrero': 'Herrería',
+            'drywall': 'Drywall',
+            'techador': 'Techador'
         };
         return tipos[tipo] || tipo;
     }
@@ -223,6 +249,7 @@ class ClienteManager {
         return estados[estado] || estado;
     }
 
+    // ✅ FUNCIÓN ACTUALIZADA PARA CANCELAR SOLICITUD
     async cancelarSolicitud(id) {
         if (!confirm('¿Estás seguro de que quieres cancelar esta solicitud?')) {
             return;
@@ -230,33 +257,48 @@ class ClienteManager {
 
         try {
             const token = authManager.token;
-            const response = await fetch(`/api/solicitudes/${id}`, {
+            const response = await fetch(`/api/solicitudes/${id}/cancelar`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    estado: 'cancelada'
-                })
+                }
             });
 
-            if (response.ok) {
-                showNotification('✅ Solicitud cancelada', 'success');
+            const data = await response.json();
+
+            if (data.success) {
+                showNotification('✅ Solicitud cancelada exitosamente', 'success');
                 await this.cargarSolicitudes();
                 await this.cargarEstadisticas();
             } else {
-                showNotification('❌ Error al cancelar solicitud', 'danger');
+                showNotification('❌ Error al cancelar solicitud: ' + (data.mensaje || 'Error desconocido'), 'danger');
             }
         } catch (error) {
-            showNotification('❌ Error de conexión', 'danger');
+            console.error('Error cancelando solicitud:', error);
+            showNotification('❌ Error de conexión al cancelar solicitud', 'danger');
         }
     }
 
     verDetalles(id) {
-        const solicitud = this.solicitudes.find(s => s.id === id);
+        const solicitud = this.solicitudes.find(s => s._id === id);
         if (solicitud) {
-            alert(`Detalles de la solicitud:\n\nTipo: ${this.getTipoDisplay(solicitud.oficio)}\nDescripción: ${solicitud.descripcion}\nUbicación: ${solicitud.ubicacion}\nEstado: ${this.getEstadoDisplay(solicitud.estado)}`);
+            const detalles = `
+Detalles de la solicitud:
+
+📌 Título: ${solicitud.titulo}
+🔧 Tipo: ${this.getTipoDisplay(solicitud.oficio)}
+📝 Descripción: ${solicitud.descripcion}
+📍 Ubicación: ${solicitud.ubicacion}
+📞 Teléfono: ${solicitud.telefono || 'No proporcionado'}
+📧 Correo: ${solicitud.correo || 'No proporcionado'}
+📅 Fecha: ${this.formatearFecha(solicitud.fechaCreacion)}
+🔄 Estado: ${this.getEstadoDisplay(solicitud.estado)}
+            `.trim();
+            
+            alert(detalles);
+        } else {
+            showNotification('❌ No se encontró la solicitud', 'danger');
         }
     }
 }

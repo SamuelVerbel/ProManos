@@ -97,6 +97,26 @@ class TrabajadorManager {
         }
     }
 
+    // ✅ FUNCIÓN NUEVA PARA FORMATEAR FECHAS
+    formatearFecha(fechaISO) {
+        if (!fechaISO) return 'Fecha no disponible';
+        try {
+            const fecha = new Date(fechaISO);
+            const fechaAjustada = new Date(fecha.getTime());
+            return fechaAjustada.toLocaleDateString('es-CO', {
+                year: 'numeric',
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZone: 'America/Bogota'
+            });
+        } catch (error) {
+            console.error('Error formateando fecha:', fechaISO, error);
+            return 'Fecha inválida';
+        }
+    }
+
     mostrarSolicitudes() {
         const container = document.getElementById('solicitudesContainer');
         if (!container) return;
@@ -120,7 +140,7 @@ class TrabajadorManager {
                             ${this.getTipoDisplay(solicitud.oficio)}
                         </strong>
                         <small class="text-muted" style="margin-left: 0.5rem;">
-                            ${new Date(solicitud.fecha_creacion).toLocaleDateString('es-ES')}
+                            ${this.formatearFecha(solicitud.fechaCreacion)}
                         </small>
                     </div>
                 </div>
@@ -134,17 +154,12 @@ class TrabajadorManager {
                 </div>
 
                 <div style="display: flex; gap: 0.5rem;">
-                    <button class="btn btn-sm btn-success" onclick="trabajadorManager.aceptarSolicitud('${solicitud.id}')" 
+                    <button class="btn btn-sm btn-success" onclick="trabajadorManager.aceptarSolicitud('${solicitud._id}')" 
                             style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
                         <i class="fas fa-check"></i> Aceptar Trabajo
                     </button>
                     
-                    <button class="btn btn-sm btn-danger" onclick="trabajadorManager.rechazarSolicitud('${solicitud.id}')" 
-                            style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
-                        <i class="fas fa-times"></i> Rechazar Trabajo
-                    </button>
-
-                    <button class="btn btn-sm btn-outline-primary" onclick="trabajadorManager.verDetallesSolicitud('${solicitud.id}')" 
+                    <button class="btn btn-sm btn-outline-primary" onclick="trabajadorManager.verDetallesSolicitud('${solicitud._id}')" 
                             style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
                         <i class="fas fa-eye"></i> Ver Detalles
                     </button>
@@ -170,9 +185,9 @@ class TrabajadorManager {
         container.innerHTML = this.trabajos.map(trabajo => `
             <div class="trabajo-item" style="border-left: 4px solid #27ae60; padding: 0.5rem; margin-bottom: 0.5rem; background: #f8f9fa;">
                 <p style="margin: 0; font-weight: 500;">${trabajo.descripcion}</p>
-                <small class="text-muted">Asignado: ${new Date(trabajo.fecha_asignacion).toLocaleDateString('es-ES')}</small>
+                <small class="text-muted">Asignado: ${this.formatearFecha(trabajo.fechaAsignacion)}</small>
                 <div style="margin-top: 0.5rem;">
-                    <button class="btn btn-sm btn-primary" onclick="trabajadorManager.completarTrabajo('${trabajo.id}')">
+                    <button class="btn btn-sm btn-primary" onclick="trabajadorManager.completarTrabajo('${trabajo._id}')">
                         <i class="fas fa-check-circle"></i> Marcar como Completado
                     </button>
                 </div>
@@ -182,11 +197,12 @@ class TrabajadorManager {
 
     mostrarPerfil(perfil) {
         // Actualizar información del perfil en la UI
-        document.getElementById('especialidad').textContent = perfil.oficio || 'No especificada';
+        document.getElementById('especialidad').textContent = this.getTipoDisplay(perfil.oficio) || 'No especificada';
         document.getElementById('experiencia').textContent = perfil.experiencia ? `${perfil.experiencia} años` : '- años';
         document.getElementById('calificacion').textContent = perfil.calificacion ? `${perfil.calificacion}/5` : '-/5';
     }
 
+    // ✅ ACTUALIZADA CON LAS 8 CATEGORÍAS
     getTipoDisplay(tipo) {
         const tipos = {
             'albañil': 'Albañilería',
@@ -194,7 +210,9 @@ class TrabajadorManager {
             'electricista': 'Electricidad',
             'pintor': 'Pintura',
             'carpintero': 'Carpintería',
-            'jardinero': 'Jardinería'
+            'herrero': 'Herrería',
+            'drywall': 'Drywall',
+            'techador': 'Techador'
         };
         return tipos[tipo] || tipo;
     }
@@ -213,10 +231,7 @@ class TrabajadorManager {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    trabajador_id: authManager.user.id
-                })
+                }
             });
 
             const data = await response.json();
@@ -237,9 +252,22 @@ class TrabajadorManager {
     }
 
     verDetallesSolicitud(id) {
-        const solicitud = this.solicitudes.find(s => s.id === id);
+        const solicitud = this.solicitudes.find(s => s._id === id);
         if (solicitud) {
-            alert(`Detalles de la solicitud:\n\nTipo: ${this.getTipoDisplay(solicitud.oficio)}\nDescripción: ${solicitud.descripcion}\nUbicación: ${solicitud.ubicacion}\nPresupuesto: $${solicitud.presupuesto || '0'}`);
+            const detalles = `
+Detalles de la solicitud:
+
+📌 Título: ${solicitud.titulo}
+🔧 Tipo: ${this.getTipoDisplay(solicitud.oficio)}
+📝 Descripción: ${solicitud.descripcion}
+📍 Ubicación: ${solicitud.ubicacion}
+📞 Teléfono: ${solicitud.telefono || 'No proporcionado'}
+📧 Correo: ${solicitud.correo || 'No proporcionado'}
+📅 Fecha: ${this.formatearFecha(solicitud.fechaCreacion)}
+🔄 Estado: ${solicitud.estado}
+            `.trim();
+            
+            alert(detalles);
         }
     }
 
@@ -252,7 +280,7 @@ class TrabajadorManager {
             console.log('🔄 Completando trabajo:', trabajoId);
             
             const token = authManager.token;
-            const response = await fetch(`/api/trabajos/${trabajoId}/completar`, {
+            const response = await fetch(`/api/solicitudes/${trabajoId}/completar`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -266,6 +294,7 @@ class TrabajadorManager {
             if (response.ok && data.success) {
                 showNotification('✅ Trabajo marcado como completado', 'success');
                 await this.cargarTrabajos();
+                await this.cargarSolicitudes();
             } else {
                 showNotification('❌ ' + (data.mensaje || 'Error al completar trabajo'), 'danger');
             }
@@ -275,7 +304,7 @@ class TrabajadorManager {
         }
     }
 
-        // Métodos para editar perfil
+    // Métodos para editar perfil
     abrirModalEditarPerfil() {
         this.cargarDatosEnFormulario();
         document.getElementById('modalEditarPerfil').style.display = 'flex';
