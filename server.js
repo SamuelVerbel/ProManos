@@ -4,9 +4,10 @@ const path = require('path');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
+const { ObjectId } = require('mongodb');
 
-// Importar nuestra nueva base de datos
-const database = require('./database');
+// Importar la conexión a MongoDB
+const { connectDB } = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -88,9 +89,9 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
-// ======== NUEVAS RUTAS API CON BASE DE DATOS MEJORADA ========
+// ======== RUTAS API CON MONGODB ATLAS ========
 
-// REGISTRO - Usando nueva base de datos
+// REGISTRO - Usando MongoDB Atlas
 app.post('/api/registro/:tipo', async (req, res) => {
     try {
         const { tipo } = req.params;
@@ -103,20 +104,29 @@ app.post('/api/registro/:tipo', async (req, res) => {
             return res.status(400).json({ success: false, mensaje: 'Nombre, email y contraseña son requeridos' });
         }
 
+        // Conectar a la base de datos
+        const db = await connectDB();
+        const usuariosCollection = db.collection('usuarios');
+
         // Verificar si el usuario ya existe
-        const existingUser = await database.findUserByEmail(tipo, email);
+        const existingUser = await usuariosCollection.findOne({ email });
         if (existingUser) {
             console.log('❌ Usuario ya existe:', email);
             return res.status(400).json({ success: false, mensaje: 'El usuario ya existe' });
         }
 
+        // Hashear contraseña
+        const hashedPassword = await bcrypt.hash(password, 10);
+
         // Preparar datos del usuario
         const userData = {
             nombre,
             email,
-            password,
-            telefono: telefono || null,
-            direccion: direccion || null
+            password: hashedPassword,
+            telefono: telefono || '',
+            direccion: direccion || '',
+            rol: tipo,
+            fechaRegistro: new Date()
         };
 
         // Campos específicos para trabajadores
@@ -135,7 +145,9 @@ app.post('/api/registro/:tipo', async (req, res) => {
         console.log('📦 Datos del usuario a guardar:', userData);
 
         // Crear usuario en la base de datos
-        const newUser = await database.addUser(tipo, userData);
+        const result = await usuariosCollection.insertOne(userData);
+        const newUser = { id: result.insertedId, ...userData };
+        
         console.log('✅ Usuario creado en BD:', newUser.id);
 
         // Generar token JWT
@@ -177,7 +189,7 @@ app.post('/api/registro/:tipo', async (req, res) => {
     }
 });
 
-// LOGIN - Usando nueva base de datos
+// LOGIN - Usando MongoDB Atlas
 app.post('/api/login/:tipo', async (req, res) => {
     try {
         const { tipo } = req.params;
@@ -188,8 +200,12 @@ app.post('/api/login/:tipo', async (req, res) => {
             return res.status(400).json({ success: false, mensaje: 'Email y contraseña son requeridos' });
         }
 
+        // Conectar a la base de datos
+        const db = await connectDB();
+        const usuariosCollection = db.collection('usuarios');
+
         // Buscar usuario
-        const user = await database.findUserByEmail(tipo, email);
+        const user = await usuariosCollection.findOne({ email, rol: tipo });
         if (!user) {
             return res.status(400).json({ success: false, mensaje: 'Credenciales incorrectas' });
         }
@@ -201,12 +217,15 @@ app.post('/api/login/:tipo', async (req, res) => {
         }
 
         // Actualizar último login
-        await database.updateLastLogin(tipo, user.id);
+        await usuariosCollection.updateOne(
+            { _id: user._id },
+            { $set: { ultimoLogin: new Date() } }
+        );
 
         // Generar token JWT
         const token = jwt.sign(
             { 
-                id: user.id, 
+                id: user._id, 
                 email: user.email, 
                 tipo: tipo,
                 nombre: user.nombre 
@@ -217,7 +236,7 @@ app.post('/api/login/:tipo', async (req, res) => {
 
         // Respuesta sin datos sensibles
         const userResponse = {
-            id: user.id,
+            id: user._id,
             nombre: user.nombre,
             email: user.email,
             telefono: user.telefono,
@@ -244,47 +263,12 @@ app.post('/api/login/:tipo', async (req, res) => {
     }
 });
 
-// RECUPERACIÓN DE CONTRASEÑA
-app.post('/api/password-reset/request', async (req, res) => {
-    try {
-        const { email } = req.body;
-
-        if (!email) {
-            return res.status(400).json({ success: false, message: 'Email es requerido' });
-        }
-
-        const result = await database.requestPasswordReset(email);
-        res.json(result);
-
-    } catch (error) {
-        console.error('Error en recuperación:', error);
-        res.status(500).json({ success: false, message: 'Error del servidor' });
-    }
-});
-
-app.post('/api/password-reset/reset', async (req, res) => {
-    try {
-        const { token, newPassword } = req.body;
-
-        if (!token || !newPassword) {
-            return res.status(400).json({ success: false, message: 'Token y nueva contraseña son requeridos' });
-        }
-
-        const result = await database.resetPassword(token, newPassword);
-        res.json(result);
-
-    } catch (error) {
-        console.error('Error al resetear contraseña:', error);
-        res.status(500).json({ success: false, message: 'Error del servidor' });
-    }
-});
-
 // SOLICITUDES - CREAR NUEVA SOLICITUD
 app.post('/api/solicitudes', authenticateToken, async (req, res) => {
     try {
         const { titulo, descripcion, oficio, presupuesto, ubicacion, telefono, correo } = req.body;
 
-        console.log('📝 Creando solicitud con datos:', req.body); // Debug
+        console.log('📝 Creando solicitud con datos:', req.body);
 
         if (!titulo || !descripcion || !oficio || !ubicacion) {
             return res.status(400).json({ 
@@ -293,7 +277,11 @@ app.post('/api/solicitudes', authenticateToken, async (req, res) => {
             });
         }
 
-        const nuevaSolicitud = await database.createSolicitud({
+        // Conectar a la base de datos
+        const db = await connectDB();
+        const solicitudesCollection = db.collection('solicitudes');
+
+        const nuevaSolicitud = {
             cliente_id: req.user.id,
             titulo,
             descripcion,
@@ -301,15 +289,20 @@ app.post('/api/solicitudes', authenticateToken, async (req, res) => {
             presupuesto: presupuesto || 0,
             ubicacion: ubicacion,
             telefono: telefono || '',
-            correo: correo || ''
-        });
+            correo: correo || '',
+            estado: 'pendiente',
+            fechaCreacion: new Date()
+        };
 
-        console.log('✅ Solicitud creada:', nuevaSolicitud); // Debug
+        const result = await solicitudesCollection.insertOne(nuevaSolicitud);
+        const solicitudCreada = { id: result.insertedId, ...nuevaSolicitud };
+
+        console.log('✅ Solicitud creada:', solicitudCreada);
 
         res.json({ 
             success: true, 
             mensaje: 'Solicitud creada exitosamente', 
-            solicitud: nuevaSolicitud 
+            solicitud: solicitudCreada 
         });
 
     } catch (error) {
@@ -321,11 +314,17 @@ app.post('/api/solicitudes', authenticateToken, async (req, res) => {
 // ENDPOINT PARA OBTENER SOLICITUDES DEL CLIENTE
 app.get('/api/solicitudes/cliente', authenticateToken, async (req, res) => {
     try {
-        console.log('📋 Obteniendo solicitudes para cliente:', req.user.id); // Debug
+        console.log('📋 Obteniendo solicitudes para cliente:', req.user.id);
         
-        const solicitudes = await database.getSolicitudesByCliente(req.user.id);
+        const db = await connectDB();
+        const solicitudesCollection = db.collection('solicitudes');
         
-        console.log('✅ Solicitudes encontradas:', solicitudes.length); // Debug
+        const solicitudes = await solicitudesCollection
+            .find({ cliente_id: req.user.id })
+            .sort({ fechaCreacion: -1 })
+            .toArray();
+        
+        console.log('✅ Solicitudes encontradas:', solicitudes.length);
         
         res.json(solicitudes);
     } catch (error) {
@@ -338,15 +337,29 @@ app.get('/api/solicitudes/cliente', authenticateToken, async (req, res) => {
 app.get('/api/trabajadores', async (req, res) => {
     try {
         const { oficio } = req.query;
-        let trabajadores;
-
+        
+        const db = await connectDB();
+        const usuariosCollection = db.collection('usuarios');
+        
+        let query = { rol: 'trabajador', disponible: true };
         if (oficio) {
-            trabajadores = await database.getTrabajadoresByOficio(oficio);
-        } else {
-            trabajadores = await database.getAllTrabajadores();
+            query.oficio = oficio;
         }
 
-        res.json(trabajadores);
+        const trabajadores = await usuariosCollection.find(query).toArray();
+        
+        // Remover datos sensibles
+        const trabajadoresResponse = trabajadores.map(t => ({
+            id: t._id,
+            nombre: t.nombre,
+            oficio: t.oficio,
+            experiencia: t.experiencia,
+            especialidades: t.especialidades,
+            calificacion: t.calificacion,
+            telefono: t.telefono
+        }));
+
+        res.json(trabajadoresResponse);
 
     } catch (error) {
         console.error('Error al obtener trabajadores:', error);
@@ -357,7 +370,10 @@ app.get('/api/trabajadores', async (req, res) => {
 // PERFIL DE USUARIO
 app.get('/api/perfil', authenticateToken, async (req, res) => {
     try {
-        const user = await database.findUserById(req.user.tipo, req.user.id);
+        const db = await connectDB();
+        const usuariosCollection = db.collection('usuarios');
+        
+        const user = await usuariosCollection.findOne({ _id: new ObjectId(req.user.id) });
         
         if (!user) {
             return res.status(404).json({ success: false, mensaje: 'Usuario no encontrado' });
@@ -382,11 +398,20 @@ app.put('/api/perfil', authenticateToken, async (req, res) => {
         delete updateData.email;
         delete updateData.password;
 
-        const updatedUser = await database.updateUserProfile(req.user.tipo, req.user.id, updateData);
+        const db = await connectDB();
+        const usuariosCollection = db.collection('usuarios');
 
-        if (!updatedUser) {
+        const result = await usuariosCollection.updateOne(
+            { _id: new ObjectId(req.user.id) },
+            { $set: updateData }
+        );
+
+        if (result.matchedCount === 0) {
             return res.status(404).json({ success: false, mensaje: 'Usuario no encontrado' });
         }
+
+        // Obtener usuario actualizado
+        const updatedUser = await usuariosCollection.findOne({ _id: new ObjectId(req.user.id) });
 
         // Remover datos sensibles
         const { password, ...userProfile } = updatedUser;
@@ -401,24 +426,31 @@ app.put('/api/perfil', authenticateToken, async (req, res) => {
 // ESTADÍSTICAS (para dashboard)
 app.get('/api/estadisticas', authenticateToken, async (req, res) => {
     try {
+        const db = await connectDB();
+        const solicitudesCollection = db.collection('solicitudes');
+        
         let estadisticas = {};
 
         if (req.user.tipo === 'cliente') {
-            const solicitudes = await database.getSolicitudesByCliente(req.user.id);
+            const solicitudes = await solicitudesCollection
+                .find({ cliente_id: req.user.id })
+                .toArray();
+                
             estadisticas = {
                 total_solicitudes: solicitudes.length,
                 solicitudes_pendientes: solicitudes.filter(s => s.estado === 'pendiente').length,
                 solicitudes_completadas: solicitudes.filter(s => s.estado === 'completada').length
             };
         } else if (req.user.tipo === 'trabajador') {
-            const solicitudes = await database.getSolicitudesByTrabajador(req.user.id);
-            const trabajosActivos = await database.getTrabajosActivosByTrabajador(req.user.id);
-            
+            const solicitudes = await solicitudesCollection
+                .find({ trabajador_id: req.user.id })
+                .toArray();
+                
             estadisticas = {
                 total_trabajos: solicitudes.length,
                 trabajos_pendientes: solicitudes.filter(s => s.estado === 'pendiente').length,
                 trabajos_completados: solicitudes.filter(s => s.estado === 'completada').length,
-                trabajos_activos: trabajosActivos.length
+                trabajos_activos: solicitudes.filter(s => s.estado === 'asignado').length
             };
         }
 
@@ -430,19 +462,173 @@ app.get('/api/estadisticas', authenticateToken, async (req, res) => {
     }
 });
 
-// Fallback para servir la SPA
-app.get('*', (req, res) => {
-    if (req.method === 'GET') {
-        return res.sendFile(path.join(__dirname, 'index.html'), (err) => {
-            if (err) {
-                console.error('Error sirviendo index.html:', err);
-                return res.status(500).send('Server error');
-            }
-        });
+// ENDPOINT PARA OBTENER SOLICITUDES PENDIENTES (TRABAJADORES)
+app.get('/api/solicitudes/trabajador', authenticateToken, async (req, res) => {
+    try {
+        console.log('📋 Obteniendo solicitudes para trabajador:', req.user.id);
+        
+        const db = await connectDB();
+        const solicitudesCollection = db.collection('solicitudes');
+        
+        const solicitudes = await solicitudesCollection
+            .find({ estado: 'pendiente' })
+            .sort({ fechaCreacion: -1 })
+            .toArray();
+            
+        console.log('✅ Solicitudes encontradas:', solicitudes.length);
+        
+        res.json(solicitudes);
+    } catch (error) {
+        console.error('❌ Error:', error);
+        res.status(500).json({ success: false, mensaje: 'Error al obtener solicitudes' });
     }
-    res.status(404).send('Not Found');
 });
 
+// ACEPTAR SOLICITUD (trabajador)
+app.put('/api/solicitudes/:id/aceptar', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Verificar que el usuario es un trabajador
+        if (req.user.tipo !== 'trabajador') {
+            return res.status(403).json({ success: false, mensaje: 'Solo los trabajadores pueden aceptar solicitudes' });
+        }
+
+        const db = await connectDB();
+        const solicitudesCollection = db.collection('solicitudes');
+
+        const result = await solicitudesCollection.updateOne(
+            { _id: new ObjectId(id) },
+            { 
+                $set: { 
+                    estado: 'asignado',
+                    trabajador_id: req.user.id,
+                    fechaAsignacion: new Date()
+                } 
+            }
+        );
+
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ success: false, mensaje: 'Solicitud no encontrada' });
+        }
+
+        const solicitudActualizada = await solicitudesCollection.findOne({ _id: new ObjectId(id) });
+
+        res.json({ success: true, mensaje: 'Solicitud aceptada', solicitud: solicitudActualizada });
+
+    } catch (error) {
+        console.error('Error al aceptar solicitud:', error);
+        res.status(500).json({ success: false, mensaje: 'Error al aceptar solicitud' });
+    }
+});
+
+// COMPLETAR SOLICITUD (trabajador)
+app.put('/api/solicitudes/:id/completar', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Verificar que el usuario es un trabajador
+        if (req.user.tipo !== 'trabajador') {
+            return res.status(403).json({ success: false, mensaje: 'Solo los trabajadores pueden completar solicitudes' });
+        }
+
+        const db = await connectDB();
+        const solicitudesCollection = db.collection('solicitudes');
+
+        const result = await solicitudesCollection.updateOne(
+            { _id: new ObjectId(id), trabajador_id: req.user.id },
+            { 
+                $set: { 
+                    estado: 'completada',
+                    fechaCompletacion: new Date()
+                } 
+            }
+        );
+
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ success: false, mensaje: 'Solicitud no encontrada' });
+        }
+
+        const solicitudActualizada = await solicitudesCollection.findOne({ _id: new ObjectId(id) });
+
+        res.json({ success: true, mensaje: 'Solicitud completada', solicitud: solicitudActualizada });
+
+    } catch (error) {
+        console.error('Error al completar solicitud:', error);
+        res.status(500).json({ success: false, mensaje: 'Error al completar solicitud' });
+    }
+});
+
+// CANCELAR SOLICITUD (cliente)
+app.put('/api/solicitudes/:id/cancelar', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const db = await connectDB();
+        const solicitudesCollection = db.collection('solicitudes');
+
+        const result = await solicitudesCollection.updateOne(
+            { _id: new ObjectId(id), cliente_id: req.user.id },
+            { 
+                $set: { 
+                    estado: 'cancelada',
+                    fechaCancelacion: new Date()
+                } 
+            }
+        );
+
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ success: false, mensaje: 'Solicitud no encontrada' });
+        }
+
+        res.json({ success: true, mensaje: 'Solicitud cancelada' });
+
+    } catch (error) {
+        console.error('Error al cancelar solicitud:', error);
+        res.status(500).json({ success: false, mensaje: 'Error al cancelar solicitud' });
+    }
+});
+
+// OBTENER TRABAJOS ASIGNADOS (TRABAJADOR)
+app.get('/api/trabajos/trabajador', authenticateToken, async (req, res) => {
+    try {
+        console.log('👷 Obteniendo trabajos asignados para:', req.user.id);
+        
+        const db = await connectDB();
+        const solicitudesCollection = db.collection('solicitudes');
+        
+        const trabajos = await solicitudesCollection
+            .find({ 
+                trabajador_id: req.user.id,
+                estado: 'asignado'
+            })
+            .sort({ fechaAsignacion: -1 })
+            .toArray();
+        
+        console.log('✅ Trabajos activos encontrados:', trabajos.length);
+        
+        res.json(trabajos);
+    } catch (error) {
+        console.error('❌ Error al obtener trabajos:', error);
+        res.status(500).json({ success: false, mensaje: 'Error al obtener trabajos' });
+    }
+});
+
+// OBTENER CATEGORÍAS
+app.get('/api/categorias', async (req, res) => {
+    try {
+        const db = await connectDB();
+        const categoriasCollection = db.collection('categorias');
+        
+        const categorias = await categoriasCollection.find().toArray();
+        res.json(categorias);
+    } catch (error) {
+        console.error('Error al obtener categorías:', error);
+        res.status(500).json({ success: false, mensaje: 'Error al obtener categorías' });
+    }
+});
+
+// Función para mostrar estadísticas al iniciar
 async function mostrarEstadisticas() {
   try {
     const db = await connectDB();
@@ -460,6 +646,7 @@ async function mostrarEstadisticas() {
   }
 }
 
+// Iniciar servidor
 app.listen(PORT, () => {
     console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
     console.log(`📊 Panel de cliente: http://localhost:${PORT}/clientes`);
@@ -468,157 +655,15 @@ app.listen(PORT, () => {
     mostrarEstadisticas();
 });
 
-// ACTUALIZAR SOLICITUD (para cancelar)
-app.put('/api/solicitudes/:id', authenticateToken, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { estado } = req.body;
-
-        const solicitud = await database.updateSolicitudEstado(id, estado);
-        
-        if (solicitud) {
-            res.json({ success: true, mensaje: 'Solicitud actualizada', solicitud });
-        } else {
-            res.status(404).json({ success: false, mensaje: 'Solicitud no encontrada' });
-        }
-
-    } catch (error) {
-        console.error('Error al actualizar solicitud:', error);
-        res.status(500).json({ success: false, mensaje: 'Error al actualizar solicitud' });
-    }
-});
-
-// ACEPTAR SOLICITUD (trabajador)
-app.put('/api/solicitudes/:id/aceptar', authenticateToken, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { trabajador_id } = req.body;
-
-        // Verificar que el usuario es un trabajador
-        if (req.user.tipo !== 'trabajadores') {
-            return res.status(403).json({ success: false, mensaje: 'Solo los trabajadores pueden aceptar solicitudes' });
-        }
-
-        const solicitud = await database.updateSolicitudEstado(id, 'asignado', trabajador_id);
-        
-        if (solicitud) {
-            // Crear trabajo activo
-            await database.createTrabajoActivo({
-                solicitud_id: id,
-                trabajador_id: trabajador_id,
-                cliente_id: solicitud.cliente_id,
-                descripcion: solicitud.descripcion,
-                oficio: solicitud.oficio
-            });
-
-            res.json({ success: true, mensaje: 'Solicitud aceptada', solicitud });
-        } else {
-            res.status(404).json({ success: false, mensaje: 'Solicitud no encontrada' });
-        }
-
-    } catch (error) {
-        console.error('Error al aceptar solicitud:', error);
-        res.status(500).json({ success: false, mensaje: 'Error al aceptar solicitud' });
-    }
-});
-
-// COMPLETAR SOLICITUD (trabajador)
-app.put('/api/solicitudes/:id/completar', authenticateToken, async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        // Verificar que el usuario es un trabajador
-        if (req.user.tipo !== 'trabajadores') {
-            return res.status(403).json({ success: false, mensaje: 'Solo los trabajadores pueden completar solicitudes' });
-        }
-
-        const solicitud = await database.updateSolicitudEstado(id, 'completada');
-        
-        if (solicitud) {
-            // Actualizar trabajo activo
-            const trabajos = await database.getTrabajosActivosByTrabajador(req.user.id);
-            const trabajo = trabajos.find(t => t.solicitud_id === id);
-            if (trabajo) {
-                await database.updateTrabajoEstado(trabajo.id, 'completado');
+// Fallback para servir la SPA
+app.get('*', (req, res) => {
+    if (req.method === 'GET') {
+        return res.sendFile(path.join(__dirname, 'index.html'), (err) => {
+            if (err) {
+                console.error('Error sirviendo index.html:', err);
+                return res.status(500).send('Server error');
             }
-
-            res.json({ success: true, mensaje: 'Solicitud completada', solicitud });
-        } else {
-            res.status(404).json({ success: false, mensaje: 'Solicitud no encontrada' });
-        }
-
-    } catch (error) {
-        console.error('Error al completar solicitud:', error);
-        res.status(500).json({ success: false, mensaje: 'Error al completar solicitud' });
+        });
     }
-});
-
-// ENDPOINT PARA OBTENER SOLICITUDES PENDIENTES (TRABAJADORES)
-app.get('/api/solicitudes/trabajador', authenticateToken, async (req, res) => {
-    try {
-        console.log('📋 Obteniendo solicitudes para trabajador:', req.user.id);
-        console.log('👤 Usuario:', req.user);
-        
-        const solicitudes = await database.getSolicitudesPendientes();
-        console.log('✅ Solicitudes encontradas:', solicitudes);
-        
-        res.json(solicitudes);
-    } catch (error) {
-        console.error('❌ Error:', error);
-        res.status(500).json({ success: false, mensaje: 'Error al obtener solicitudes' });
-    }
-});
-
-// ENDPOINT PARA OBTENER TRABAJOS ASIGNADOS (TRABAJADOR)
-app.get('/api/trabajos/trabajador', authenticateToken, async (req, res) => {
-    try {
-        console.log('👷 Obteniendo trabajos asignados para:', req.user.id);
-        
-        const trabajos = await database.getTrabajosActivosByTrabajador(req.user.id);
-        
-        console.log('✅ Trabajos activos encontrados:', trabajos.length);
-        
-        res.json(trabajos);
-    } catch (error) {
-        console.error('❌ Error al obtener trabajos:', error);
-        res.status(500).json({ success: false, mensaje: 'Error al obtener trabajos' });
-    }
-});
-
-// COMPLETAR TRABAJO
-app.put('/api/trabajos/:id/completar', authenticateToken, async (req, res) => {
-    try {
-        const { id } = req.params;
-        console.log('✅ Completando trabajo:', id);
-
-        const trabajo = await database.updateTrabajoEstado(id, 'completado');
-        
-        if (trabajo) {
-            // También actualizar la solicitud relacionada
-            await database.updateSolicitudEstado(trabajo.solicitud_id, 'completada');
-            
-            console.log('🎉 Trabajo completado exitosamente');
-            res.json({ success: true, mensaje: 'Trabajo completado', trabajo });
-        } else {
-            res.status(404).json({ success: false, mensaje: 'Trabajo no encontrado' });
-        }
-
-    } catch (error) {
-        console.error('❌ Error al completar trabajo:', error);
-        res.status(500).json({ success: false, mensaje: 'Error al completar trabajo' });
-    }
-});
-
-app.get('/debug-db', (req, res) => {
-    const database = require('./database');
-    const data = database.read();
-    const stats = database.getStats();
-    
-    res.json({
-        filePath: database.filePath,
-        stats: stats,
-        clientes: data.clientes,
-        trabajadores: data.trabajadores,
-        solicitudes: data.solicitudes
-    });
+    res.status(404).send('Not Found');
 });
