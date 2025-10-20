@@ -147,3 +147,112 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Ruta para enviar código de recuperación
+router.post('/send-recovery-code', async (req, res) => {
+    try {
+        const { email } = req.body;
+        
+        // Verificar si el usuario existe
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.json({ 
+                success: false, 
+                mensaje: 'No existe una cuenta con este email' 
+            });
+        }
+
+        // Generar código de 6 dígitos
+        const recoveryCode = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        // Guardar código en la base de datos (con expiración de 15 minutos)
+        user.recoveryCode = recoveryCode;
+        user.recoveryCodeExpires = new Date(Date.now() + 15 * 60 * 1000);
+        await user.save();
+
+        // Aquí integrarías con tu servicio de email
+        // await sendRecoveryEmail(email, recoveryCode);
+
+        console.log(`Código de recuperación para ${email}: ${recoveryCode}`);
+
+        res.json({ 
+            success: true, 
+            mensaje: 'Código de recuperación enviado' 
+        });
+    } catch (error) {
+        res.json({ 
+            success: false, 
+            mensaje: 'Error al enviar el código' 
+        });
+    }
+});
+
+// Ruta para verificar el código
+router.post('/verify-recovery-code', async (req, res) => {
+    try {
+        const { email, code } = req.body;
+        
+        const user = await User.findOne({ 
+            email, 
+            recoveryCode: code,
+            recoveryCodeExpires: { $gt: new Date() }
+        });
+
+        if (!user) {
+            return res.json({ 
+                success: false, 
+                mensaje: 'Código inválido o expirado' 
+            });
+        }
+
+        res.json({ 
+            success: true, 
+            mensaje: 'Código verificado correctamente' 
+        });
+    } catch (error) {
+        res.json({ 
+            success: false, 
+            mensaje: 'Error al verificar el código' 
+        });
+    }
+});
+
+// Ruta para cambiar la contraseña
+router.post('/reset-password', async (req, res) => {
+    try {
+        const { email, code, newPassword } = req.body;
+        
+        const user = await User.findOne({ 
+            email, 
+            recoveryCode: code,
+            recoveryCodeExpires: { $gt: new Date() }
+        });
+
+        if (!user) {
+            return res.json({ 
+                success: false, 
+                mensaje: 'Código inválido o expirado' 
+            });
+        }
+
+        // Hashear nueva contraseña
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        user.password = hashedPassword;
+        
+        // Limpiar código de recuperación
+        user.recoveryCode = undefined;
+        user.recoveryCodeExpires = undefined;
+        
+        await user.save();
+
+        res.json({ 
+            success: true, 
+            mensaje: 'Contraseña cambiada exitosamente' 
+        });
+    } catch (error) {
+        res.json({ 
+            success: false, 
+            mensaje: 'Error al cambiar la contraseña' 
+        });
+    }
+});
