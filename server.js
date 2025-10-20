@@ -443,11 +443,29 @@ app.get('*', (req, res) => {
     res.status(404).send('Not Found');
 });
 
+async function mostrarEstadisticas() {
+  try {
+    const db = await connectDB();
+    const clientes = await db.collection('usuarios').countDocuments({ rol: 'cliente' });
+    const trabajadores = await db.collection('usuarios').countDocuments({ rol: 'trabajador' });
+    const solicitudes = await db.collection('solicitudes').countDocuments();
+    
+    console.log(`📈 Estadísticas de BD:`, {
+      total_clientes: clientes,
+      total_trabajadores: trabajadores, 
+      total_solicitudes: solicitudes
+    });
+  } catch (error) {
+    console.log("📊 Estadísticas no disponibles aún");
+  }
+}
+
 app.listen(PORT, () => {
     console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
     console.log(`📊 Panel de cliente: http://localhost:${PORT}/clientes`);
     console.log(`👷 Panel de trabajador: http://localhost:${PORT}/trabajadores`);
-    console.log(`📈 Estadísticas de BD:`, database.getStats());
+    console.log("✅ MongoDB Atlas conectado correctamente");
+    mostrarEstadisticas();
 });
 
 // ACTUALIZAR SOLICITUD (para cancelar)
