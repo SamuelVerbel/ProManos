@@ -1,12 +1,12 @@
-// emailService.js
+// emailService.js - Versión corregida
 const nodemailer = require('nodemailer');
 
 // Configuración del transporter
-const transporter = nodemailer.createTransporter({
+const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
         user: 'promanoscommunity@gmail.com',
-        pass: 'bphbibayvocamcsi' // ← LA QUE COPIAS
+        pass: 'bphbibayvocamcsi'
     }
 });
 
@@ -61,35 +61,43 @@ async function sendVerificationEmail(email, verificationCode) {
 
 // Función para enviar confirmación de cambio
 async function sendPasswordChangedEmail(email) {
-    const mailOptions = {
-        from: '"ProManos Community" <promanoscommunity@gmail.com>',
-        to: email,
-        subject: '✅ Contraseña Actualizada - ProManos',
-        html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); padding: 30px; text-align: center; color: white;">
-                    <h1 style="margin: 0;">¡Contraseña Actualizada!</h1>
-                </div>
-                
-                <div style="padding: 30px; background: #f9f9f9;">
-                    <p>Hola,</p>
-                    <p>Tu contraseña en <strong>ProManos</strong> ha sido actualizada exitosamente.</p>
-                    
-                    <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 5px; margin: 20px 0;">
-                        <p style="margin: 0;">✅ Cambio realizado: ${new Date().toLocaleString('es-CO')}</p>
+    try {
+        const mailOptions = {
+            from: '"ProManos Community" <promanoscommunity@gmail.com>',
+            to: email,
+            subject: '✅ Contraseña Actualizada - ProManos',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); padding: 30px; text-align: center; color: white;">
+                        <h1 style="margin: 0;">¡Contraseña Actualizada!</h1>
                     </div>
                     
-                    <p>Si no realizaste este cambio, por favor contacta a soporte inmediatamente.</p>
+                    <div style="padding: 30px; background: #f9f9f9;">
+                        <p>Hola,</p>
+                        <p>Tu contraseña en <strong>ProManos</strong> ha sido actualizada exitosamente.</p>
+                        
+                        <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                            <p style="margin: 0;">✅ Cambio realizado: ${new Date().toLocaleString('es-CO')}</p>
+                        </div>
+                        
+                        <p>Si no realizaste este cambio, por favor contacta a soporte inmediatamente.</p>
+                    </div>
+                    
+                    <div style="background: #2c3e50; padding: 20px; text-align: center; color: white; font-size: 12px;">
+                        <p>© 2024 ProManos Community</p>
+                    </div>
                 </div>
-                
-                <div style="background: #2c3e50; padding: 20px; text-align: center; color: white; font-size: 12px;">
-                    <p>© 2024 ProManos Community</p>
-                </div>
-            </div>
-        `
-    };
+            `
+        };
 
-    return await transporter.sendMail(mailOptions);
+        const result = await transporter.sendMail(mailOptions);
+        console.log('✅ Email de confirmación enviado a:', email);
+        return { success: true, messageId: result.messageId };
+
+    } catch (error) {
+        console.error('❌ Error enviando email de confirmación:', error);
+        return { success: false, error: error.message };
+    }
 }
 
 module.exports = {
