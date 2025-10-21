@@ -1,7 +1,7 @@
 // emailService.js - Versión corregida
 const nodemailer = require('nodemailer');
 
-// Configuración del transporter
+// Configuración del transporter - CORREGIDO: createTransport en lugar de createTransporter
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
