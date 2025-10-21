@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const { ObjectId } = require('mongodb');
+const emailService = require('./emailService');
 
 // Importar la conexión a MongoDB
 const { connectDB } = require('./database');
@@ -680,7 +681,6 @@ app.post('/api/send-recovery-code', async (req, res) => {
         const { email } = req.body;
         console.log('📧 Solicitando código de recuperación para:', email);
 
-        // Conectar a la base de datos
         const db = await connectDB();
         const usuariosCollection = db.collection('usuarios');
 
@@ -696,7 +696,7 @@ app.post('/api/send-recovery-code', async (req, res) => {
         // Generar código de 6 dígitos
         const recoveryCode = Math.floor(100000 + Math.random() * 900000).toString();
         
-        // Guardar código en la base de datos (con expiración de 15 minutos)
+        // Guardar código en la base de datos
         await usuariosCollection.updateOne(
             { _id: user._id },
             { 
@@ -707,19 +707,21 @@ app.post('/api/send-recovery-code', async (req, res) => {
             }
         );
 
-        // En desarrollo: mostrar código en consola
-        console.log(`✅ Código de recuperación para ${email}: ${recoveryCode}`);
-        console.log(`⏰ El código expira en 15 minutos`);
+        // ✅ ENVIAR EMAIL REAL con Nodemailer
+        const emailResult = await emailService.sendVerificationEmail(email, recoveryCode);
 
-        // En producción aquí integrarías con tu servicio de email
-        // await sendRecoveryEmail(email, recoveryCode);
-
-        res.json({ 
-            success: true, 
-            mensaje: 'Código de recuperación enviado a tu email',
-            // Solo para desarrollo/testing - remover en producción
-            debug_code: recoveryCode
-        });
+        if (emailResult.success) {
+            console.log(`✅ Email enviado a ${email}, código: ${recoveryCode}`);
+            
+            res.json({ 
+                success: true, 
+                mensaje: 'Código de recuperación enviado a tu email',
+                // Solo para desarrollo/testing
+                debug_code: recoveryCode
+            });
+        } else {
+            throw new Error('Error enviando email');
+        }
 
     } catch (error) {
         console.error('❌ Error al enviar código:', error);
@@ -821,6 +823,13 @@ app.post('/api/reset-password', async (req, res) => {
 
         console.log('✅ Contraseña actualizada para:', email);
 
+        try {
+            await emailService.sendPasswordChangedEmail(email);
+            console.log('✅ Email de confirmación enviado a:', email);
+        } catch (emailError) {
+            console.log('⚠️ Email de confirmación no pudo enviarse, pero la contraseña se cambió:', emailError);
+        }
+
         res.json({ 
             success: true, 
             mensaje: 'Contraseña cambiada exitosamente' 
@@ -841,11 +850,9 @@ app.post('/api/resend-recovery-code', async (req, res) => {
         const { email } = req.body;
         console.log('🔄 Reenviando código para:', email);
 
-        // Conectar a la base de datos
         const db = await connectDB();
         const usuariosCollection = db.collection('usuarios');
 
-        // Verificar si el usuario existe
         const user = await usuariosCollection.findOne({ email });
         if (!user) {
             return res.json({ 
@@ -854,10 +861,9 @@ app.post('/api/resend-recovery-code', async (req, res) => {
             });
         }
 
-        // Generar nuevo código de 6 dígitos
+        // Generar nuevo código
         const recoveryCode = Math.floor(100000 + Math.random() * 900000).toString();
         
-        // Actualizar código en la base de datos
         await usuariosCollection.updateOne(
             { _id: user._id },
             { 
@@ -868,14 +874,20 @@ app.post('/api/resend-recovery-code', async (req, res) => {
             }
         );
 
-        console.log(`✅ Nuevo código de recuperación para ${email}: ${recoveryCode}`);
+        // ✅ ENVIAR EMAIL REAL
+        const emailResult = await emailService.sendVerificationEmail(email, recoveryCode);
 
-        res.json({ 
-            success: true, 
-            mensaje: 'Código reenviado exitosamente',
-            // Solo para desarrollo/testing - remover en producción
-            debug_code: recoveryCode
-        });
+        if (emailResult.success) {
+            console.log(`✅ Email reenviado a ${email}, nuevo código: ${recoveryCode}`);
+            
+            res.json({ 
+                success: true, 
+                mensaje: 'Código reenviado exitosamente',
+                debug_code: recoveryCode
+            });
+        } else {
+            throw new Error('Error enviando email');
+        }
 
     } catch (error) {
         console.error('❌ Error al reenviar código:', error);
